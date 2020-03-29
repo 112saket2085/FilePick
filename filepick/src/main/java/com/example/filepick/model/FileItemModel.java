@@ -1,5 +1,6 @@
 package com.example.filepick.model;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -8,12 +9,12 @@ import android.graphics.drawable.Drawable;
  */
 public class FileItemModel {
 
+    private Intent intent;
     private Drawable imageResource;
-    private String imageTitle;
 
-    public FileItemModel(Drawable imageResource, String imageTitle) {
+    public FileItemModel(Intent intent,Drawable imageResource) {
+        this.intent = intent;
         this.imageResource = imageResource;
-        this.imageTitle = imageTitle;
     }
 
     public Drawable getImageResource() {
@@ -24,12 +25,11 @@ public class FileItemModel {
         this.imageResource = imageResource;
     }
 
-    public String getImageTitle() {
-        return imageTitle;
+    public Intent getIntent() {
+        return intent;
     }
 
-    public void setImageTitle(String imageTitle) {
-        this.imageTitle = imageTitle;
+    public void setIntent(Intent intent) {
+        this.intent = intent;
     }
-
 }

@@ -2,17 +2,23 @@ package com.example.filepick.ui.activity;
 
 import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.filepick.R;
 import com.example.filepick.app.FilePickConstants;
 import com.example.filepick.model.Configuration;
 import com.example.filepick.model.FileItemModel;
@@ -23,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
+import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static com.example.filepick.app.FilePickConstants.INTENT_FILE_TEXT;
 
 /**
@@ -30,7 +37,7 @@ import static com.example.filepick.app.FilePickConstants.INTENT_FILE_TEXT;
  * Created by SAKET on 29/03/2020
  */
 
-public class FilePickActivity extends AppCompatActivity {
+public class FilePickActivity extends AppCompatActivity implements FileItemAdapter.OnBottomSheetItemClickListener {
 
     private BottomSheetDialog bottomSheetDialog;
     private TextView textView;
@@ -48,6 +55,9 @@ public class FilePickActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getIntentValues();
         setFilePickerIntents();
+        setFileIteModel();
+        showBottomSheetDialog();
+        initRecyclerView();
     }
 
     private void getIntentValues() {
@@ -81,7 +91,7 @@ public class FilePickActivity extends AppCompatActivity {
      */
     public List<Intent> getCameraIntents() {
         List<Intent> allIntents = new ArrayList<>();
-        Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent captureIntent = new Intent(ACTION_IMAGE_CAPTURE);
         PackageManager packageManager = getPackageManager();
         List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
         fileIconList.clear();
@@ -119,8 +129,49 @@ public class FilePickActivity extends AppCompatActivity {
             intent.setPackage(res.activityInfo.packageName);
             intents.add(intent);
         }
-
         return intents;
     }
 
+    public void showBottomSheetDialog() {
+        View view = LayoutInflater.from(this).inflate(R.layout.bottom_file_picker, (ViewGroup) null);
+        bottomSheetDialog = new BottomSheetDialog(this);
+        bottomSheetDialog.setContentView(view);
+        recyclerView = view.findViewById(R.id.recycler_view);
+        textView = view.findViewById(R.id.text_view_title);
+        textView.setText(configuration.getBottomSheetTitle());
+        bottomSheetDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                finish();
+            }
+        });
+        bottomSheetDialog.show();
+    }
+
+    private void initRecyclerView() {
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 4);
+        gridLayoutManager.setOrientation(RecyclerView.VERTICAL);
+        recyclerView.setLayoutManager(gridLayoutManager);
+        fileItemAdapter = new FileItemAdapter(fileItemModelList, this);
+        recyclerView.setAdapter(fileItemAdapter);
+
+    }
+
+    private void setFileIteModel() {
+        for (int i = 0; i < filePickerIntents.size(); i++) {
+            Intent intent = filePickerIntents.get(i);
+            String title = intent.getStringExtra(INTENT_FILE_TEXT);
+            setFileItemList(new FileItemModel(intent, fileIconList.get(i)));
+        }
+    }
+
+    private void setFileItemList(FileItemModel fileItemModel) {
+        fileItemModelList.add(fileItemModel);
+    }
+
+
+    @Override
+    public void onBottomSheetClick(int position) {
+
+    }
 }
