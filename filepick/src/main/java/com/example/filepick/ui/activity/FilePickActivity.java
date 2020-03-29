@@ -1,5 +1,6 @@
 package com.example.filepick.ui.activity;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
@@ -7,29 +8,32 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.filepick.R;
 import com.example.filepick.app.FilePickConstants;
 import com.example.filepick.model.Configuration;
 import com.example.filepick.model.FileItemModel;
+import com.example.filepick.model.MediaFiles;
 import com.example.filepick.ui.adapter.FileItemAdapter;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
+import static com.example.filepick.app.FilePickConstants.INTENT_FILE_PICK;
 import static com.example.filepick.app.FilePickConstants.INTENT_FILE_TEXT;
 
 /**
@@ -171,7 +175,40 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
 
     @Override
-    public void onBottomSheetClick(int position) {
-
+    public void onBottomSheetClick(Intent intent) {
+        if (intent.getAction() != null && intent.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE)) {
+            launchCamera();
+            return;
+        }
+        launchGallery();
     }
+
+//    private boolean checkCameraPermission() {
+//        if (PermissionCompatBuilder.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+//            PermissionCompatBuilder.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
+//            return false;
+//        }
+//        return true;
+//    }
+
+//    private boolean checkExternalStoragePermission() {
+//        if (PermissionCompatBuilder.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//            PermissionCompatBuilder.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
+//            return false;
+//        }
+//        return true;
+//    }
+
+    private void launchGallery() {
+        startActivityForResult(fileIntent, INTENT_FILE_PICK);
+    }
+
+    private void launchCamera() {
+        Uri photoURI = MediaFiles.getFileProviderUri(this);
+        if (photoURI != null) {
+            fileIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+        }
+        startActivityForResult(fileIntent, INTENT_FILE_PICK);
+    }
+
 }

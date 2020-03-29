@@ -1,6 +1,7 @@
 package com.example.filepick.ui.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,7 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.ViewHo
             @Override
             public void onClick(View v) {
                 if(listener!=null) {
-                    listener.onBottomSheetClick(holder.getAdapterPosition());
+                    listener.onBottomSheetClick(fileItemModel.getIntent());
                 }
             }
         });
@@ -74,7 +75,7 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.ViewHo
     }
 
     public interface OnBottomSheetItemClickListener {
-        void onBottomSheetClick(int position);
+        void onBottomSheetClick(Intent intent);
     }
 
 }

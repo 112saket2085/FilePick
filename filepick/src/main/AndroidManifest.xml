@@ -11,5 +11,17 @@
 
         <activity android:name=".ui.activity.FilePickActivity"
             android:theme="@style/Theme.Transparent"/>
+
+        <provider
+            android:name=".utility.UtilityFileProvider"
+            android:authorities="${applicationId}.fileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths"/>
+        </provider>
+
+
     </application>
 </manifest>

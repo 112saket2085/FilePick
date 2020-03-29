@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FilePickLibrary</string>
+    <string name="str_file_path">File Path not found</string>
+    <string name="str_file_name">File Name not found</string>
+    <string name="str_no_sharing">No Sharing Client Installed.</string>
 </resources>
