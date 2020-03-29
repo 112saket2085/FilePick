@@ -1,2 +1,3 @@
 rootProject.name='FilePick'
 include ':app'
+include ':filepick'
