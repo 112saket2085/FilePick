@@ -1,4 +1,4 @@
-package com.example.filepick.ui.adapter;
+package com.example.filepicklibrary.ui.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,9 +9,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.filepick.R;
-import com.example.filepick.app.FilePickConstants;
-import com.example.filepick.model.FileItemModel;
+import com.example.filepicklibrary.R;
+import com.example.filepicklibrary.app.FilePickConstants;
+import com.example.filepicklibrary.model.FileItemModel;
 import java.util.List;
 
 /**

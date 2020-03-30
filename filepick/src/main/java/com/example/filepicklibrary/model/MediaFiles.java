@@ -1,28 +1,32 @@
-package com.example.filepick.model;
+package com.example.filepicklibrary.model;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.FileUriExposedException;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
-import com.example.filepick.R;
+import com.example.filepicklibrary.R;
+import com.example.filepicklibrary.app.FilePickConstants;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
-import static com.example.filepick.app.FilePickConstants.FILE_PROVIDER_NAME;
+import static com.example.filepicklibrary.app.FilePickConstants.FILE_PROVIDER_NAME;
 
 /**
  * MediaFiles - Class that store various image results.
@@ -37,7 +41,7 @@ public class MediaFiles {
     private long fileSize;
     private byte[] byteData;
     private Uri uri;
-
+    private static String cameraPhotoPath;
 
     public static MediaFiles getMediaFiles(Context context, Uri selectedImageUri) {
         MediaFiles mediaFiles = new MediaFiles();
@@ -52,18 +56,23 @@ public class MediaFiles {
                 mediaFiles.setByteData(fileByte);
                 mediaFiles.setFileSize(fileByte.length);
             }
-            mediaFiles.setFilePath(getFilePath(context,selectedImageUri));
-            mediaFiles.setFileName(getFileName(context,selectedImageUri));
+            mediaFiles.setFilePath(getFilePath(context, selectedImageUri));
+            mediaFiles.setFileName(getFileName(context, selectedImageUri));
             String path = selectedImageUri.getPath();
             if (path != null) {
                 mediaFiles.setFile(new File(Objects.requireNonNull(path)));
             }
             mediaFiles.setBitmap(bitmap);
+            selectedImageUri = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, new File(Objects.requireNonNull(path)));
             mediaFiles.setUri(selectedImageUri);
-        } catch (IOException e) {
-            return null;
+            return mediaFiles;
+        } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) {
+                String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), mediaFiles.getBitmap(), "Title", null);
+                mediaFiles.setUri(Uri.parse(path));
+            }
+            return mediaFiles;
         }
-        return mediaFiles;
     }
 
     private static String getFilePath(Context context,Uri selectedImageUri) {
@@ -111,36 +120,68 @@ public class MediaFiles {
         return fileName;
     }
 
+    public static boolean isImageFile(Context context,Uri selectedImageUri) {
+        final String[] okFileExtensions = new String[]{"jpg", "png", "gif", "jpeg"};
+        String filename = getFileName(context,selectedImageUri);
+        for (String extension : okFileExtensions) {
+            if (filename.toLowerCase().endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-
-    public void openImageSharingClient(Context context, Uri uri, String intentType) {
+    /**
+     * Method to show sharing client installed - Only uri should be file provider uri
+     * @param context Application context
+     * @param uri File Provider Uri
+     * @param intentType Intent Type
+     */
+    public static void openImageSharingClient(Context context, Uri uri, String intentType) {
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         if (uri != null) {
             sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
             sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            sharingIntent.setType(intentType);
+            sharingIntent.setType(TextUtils.isEmpty(intentType) ? FilePickConstants.IMAGE_INTENT_TYPE : intentType);
         }
         try {
             context.startActivity(Intent.createChooser(sharingIntent, "Share image using"));
-        } catch (android.content.ActivityNotFoundException ex) {
-            ex.printStackTrace();
-            showToastMessage(context,context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
+        } catch (Exception e) {
+            if (e instanceof ActivityNotFoundException) {
+                showToastMessage(context, context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
+            } else if (e instanceof FileUriExposedException) {
+                showToastMessage(context, context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 
-    public static File createTempImageFile(Context context) {
+    /**
+     * Create Temporary Image file.
+     * @param context Application context
+     * @return Empty Temporary storage file
+     */
+    public static File createEmptyTempImageFile(Context context) {
         String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
-            return File.createTempFile(imageFileName, ".jpg", storageDir);
+            File file= File.createTempFile(imageFileName, ".jpg", storageDir);
+            MediaFiles.cameraPhotoPath = file.getAbsolutePath();
+            return file;
         } catch (IOException e) {
             return null;
         }
     }
 
-    public static Uri getFileProviderUri(Context context) {
-        File file = MediaFiles.createTempImageFile(context);
+    /**
+     *
+     * @param context Application context
+     * @return Empty Temporary storage file Uri to be used in Intent Extra Output to store image.
+     */
+    public static Uri getCameraFileProviderUri(Context context) {
+        File file = MediaFiles.createEmptyTempImageFile(context);
         Uri photoURI = null;
         if (file != null) {
             photoURI = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, file);
@@ -160,7 +201,7 @@ public class MediaFiles {
         return byteBuff.toByteArray();
     }
 
-    private static void showToastMessage(Context context,String msg, int duration) {
+    public static void showToastMessage(Context context,String msg, int duration) {
         Toast.makeText(context, msg, duration).show();
     }
 
@@ -221,4 +262,7 @@ public class MediaFiles {
         this.uri = uri;
     }
 
+    public static String getCameraPhotoPath() {
+        return cameraPhotoPath;
+    }
 }

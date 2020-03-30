@@ -1,4 +1,4 @@
-package com.example.filepick.app;
+package com.example.filepicklibrary.app;
 
 /**
  * FilePickConstants - Constants variable

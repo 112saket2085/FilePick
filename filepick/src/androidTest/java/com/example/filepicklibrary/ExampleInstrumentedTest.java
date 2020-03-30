@@ -1,4 +1,4 @@
-package com.example.filepick;
+package com.example.filepicklibrary;
 
 import android.content.Context;
 

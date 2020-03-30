@@ -9,8 +9,7 @@
     <ImageView
         android:id="@+id/image_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="150dp"
+        android:layout_height="150dp"
         />
 
     <RelativeLayout
@@ -33,7 +32,8 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/button_add"
             android:layout_marginStart="10dp"
-            android:text="Share File"/>
+            android:text="Share File"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 

@@ -1,7 +1,5 @@
-package com.example.filepick.ui.activity;
+package com.example.filepicklibrary.ui.activity;
 
-import android.Manifest;
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,21 +9,25 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.filepick.R;
-import com.example.filepick.app.FilePickConstants;
-import com.example.filepick.model.Configuration;
-import com.example.filepick.model.FileItemModel;
-import com.example.filepick.model.MediaFiles;
-import com.example.filepick.ui.adapter.FileItemAdapter;
+import com.example.filepicklibrary.R;
+import com.example.filepicklibrary.app.FilePickConstants;
+import com.example.filepicklibrary.model.Configuration;
+import com.example.filepicklibrary.model.FileItemModel;
+import com.example.filepicklibrary.model.MediaFiles;
+import com.example.filepicklibrary.ui.adapter.FileItemAdapter;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.theartofdev.edmodo.cropper.CropImage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,8 +35,9 @@ import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
-import static com.example.filepick.app.FilePickConstants.INTENT_FILE_PICK;
-import static com.example.filepick.app.FilePickConstants.INTENT_FILE_TEXT;
+import static com.example.filepicklibrary.app.FilePickConstants.ERROR_CODE_FILE_PICK_;
+import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
+import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_TEXT;
 
 /**
  * File Pick Activity that shows all file options available in Bottom Sheet that can handle file request.
@@ -106,6 +109,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
             intent.putExtra(INTENT_FILE_TEXT, title);
             intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
             intent.setPackage(res.activityInfo.packageName);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             allIntents.add(intent);
         }
 
@@ -131,6 +135,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
             intent.putExtra(INTENT_FILE_TEXT, title);
             intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
             intent.setPackage(res.activityInfo.packageName);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intents.add(intent);
         }
         return intents;
@@ -158,13 +163,11 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         recyclerView.setLayoutManager(gridLayoutManager);
         fileItemAdapter = new FileItemAdapter(fileItemModelList, this);
         recyclerView.setAdapter(fileItemAdapter);
-
     }
 
     private void setFileIteModel() {
         for (int i = 0; i < filePickerIntents.size(); i++) {
             Intent intent = filePickerIntents.get(i);
-            String title = intent.getStringExtra(INTENT_FILE_TEXT);
             setFileItemList(new FileItemModel(intent, fileIconList.get(i)));
         }
     }
@@ -176,11 +179,14 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
     @Override
     public void onBottomSheetClick(Intent intent) {
+        if(bottomSheetDialog!=null) {
+            bottomSheetDialog.dismiss();
+        }
         if (intent.getAction() != null && intent.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE)) {
-            launchCamera();
+            launchCamera(intent);
             return;
         }
-        launchGallery();
+        launchGallery(intent);
     }
 
 //    private boolean checkCameraPermission() {
@@ -199,16 +205,107 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 //        return true;
 //    }
 
-    private void launchGallery() {
-        startActivityForResult(fileIntent, INTENT_FILE_PICK);
+    private void launchGallery(Intent intent) {
+        startActivityForResult(intent, INTENT_FILE_PICK);
     }
 
-    private void launchCamera() {
-        Uri photoURI = MediaFiles.getFileProviderUri(this);
+    private void launchCamera(Intent intent) {
+        Uri photoURI = MediaFiles.getCameraFileProviderUri(this);
         if (photoURI != null) {
-            fileIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
-        startActivityForResult(fileIntent, INTENT_FILE_PICK);
+        startActivityForResult(intent, INTENT_FILE_PICK);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case INTENT_FILE_PICK:
+                if (resultCode == RESULT_OK) {
+                    Uri selectedImageUri;
+                    if (data != null) {
+                        selectedImageUri = data.getData();
+                    } else {
+                        selectedImageUri = Uri.fromFile(new File(MediaFiles.getCameraPhotoPath()));
+                    }
+                    if (data!=null && !TextUtils.isEmpty(data.getAction()) && data.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE) && configuration.isCropRequired()) {
+                        openCropperActivity(selectedImageUri);
+                    } else if (MediaFiles.isImageFile(this,selectedImageUri) && configuration.isCropRequired()) {
+                        openCropperActivity(selectedImageUri);
+                    } else {
+                        setFilePickSuccessResult(selectedImageUri);
+                    }
+                } else {
+                    handleErrorResultCode(resultCode);
+                }
+                break;
+            case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    CropImage.ActivityResult result = CropImage.getActivityResult(data);
+                    if (result != null) {
+                        Uri uri = result.getUri();
+                        setFilePickSuccessResult(uri);
+                    }
+                } else {
+                    handleErrorResultCode(resultCode);
+                }
+                break;
+
+            default:
+                setFilePickErrorResult();
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                break;
+        }
+    }
+
+    private void handleErrorResultCode(int resultCode) {
+        switch (resultCode) {
+            case RESULT_FIRST_USER:
+                setFilePickErrorResult();
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                break;
+            case RESULT_CANCELED:
+                setFilePickCancelled();
+                MediaFiles.showToastMessage(this,getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
+                break;
+            default:
+                setFilePickErrorResult();
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                break;
+        }
+    }
+
+    private void setFilePickSuccessResult(Uri uri) {
+        Intent intent = new Intent();
+        intent.putExtra(FilePickConstants.FILE_PICK_SUCCESS, uri);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    private void setFilePickCancelled() {
+        Intent intent = new Intent();
+        setResult(RESULT_CANCELED, intent);
+        finish();
+    }
+
+    private void setFilePickErrorResult() {
+        Intent intent = new Intent();
+        intent.putExtra(FilePickConstants.FILE_PICK_ERROR, ERROR_CODE_FILE_PICK_);
+        setResult(RESULT_FIRST_USER, intent);
+        finish();
+    }
+
+    /**
+     * Method to start cropper activity
+     * @param uri File Uri
+     */
+    private void openCropperActivity(Uri uri) {
+        CropImage.ActivityBuilder activityBuilder = CropImage.activity(uri);
+        if (configuration.getAspectRatioX() != -1 && configuration.getAspectRatioY() != -1) {
+            activityBuilder.setAspectRatio(configuration.getAspectRatioX(), configuration.getAspectRatioY());
+        }
+        activityBuilder.start(this);
     }
 
 }

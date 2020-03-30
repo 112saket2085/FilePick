@@ -1,4 +1,4 @@
-package com.example.filepick.model;
+package com.example.filepicklibrary.model;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;

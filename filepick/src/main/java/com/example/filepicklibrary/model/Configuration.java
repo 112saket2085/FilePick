@@ -1,8 +1,8 @@
-package com.example.filepick.model;
+package com.example.filepicklibrary.model;
 
 import java.io.Serializable;
-import static com.example.filepick.app.FilePickConstants.BOTTOM_SHEET_TITLE;
-import static com.example.filepick.app.FilePickConstants.IMAGE_INTENT_TYPE;
+import static com.example.filepicklibrary.app.FilePickConstants.BOTTOM_SHEET_TITLE;
+import static com.example.filepicklibrary.app.FilePickConstants.IMAGE_INTENT_TYPE;
 
 /**
  * Configuration - Builder Class to set various request.

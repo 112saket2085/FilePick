@@ -1,4 +1,4 @@
-package com.example.filepick.utility;
+package com.example.filepicklibrary.utility;
 
 import androidx.core.content.FileProvider;
 
@@ -7,4 +7,8 @@ import androidx.core.content.FileProvider;
  * Created by SAKET on 29/03/2020
  */
 public class UtilityFileProvider extends FileProvider {
+
+    public static class FileProvider extends androidx.core.content.FileProvider {
+
+    }
 }

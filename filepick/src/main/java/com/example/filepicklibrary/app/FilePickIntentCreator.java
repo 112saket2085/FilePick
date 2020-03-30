@@ -1,13 +1,13 @@
-package com.example.filepick.app;
+package com.example.filepicklibrary.app;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import com.example.filepick.model.Configuration;
-import com.example.filepick.model.MediaFiles;
-import com.example.filepick.ui.activity.FilePickActivity;
+import com.example.filepicklibrary.model.Configuration;
+import com.example.filepicklibrary.model.MediaFiles;
+import com.example.filepicklibrary.ui.activity.FilePickActivity;
 
-import static com.example.filepick.app.FilePickConstants.REQ_CODE_FILE_PICK;
+import static com.example.filepicklibrary.app.FilePickConstants.REQ_CODE_FILE_PICK;
 
 /**
  * Intent For Launching Activity and Getting Result on onActivity Result.
