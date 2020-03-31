@@ -58,6 +58,13 @@ public class MediaFiles {
     private Uri uri;
     private static String cameraPhotoPath;
 
+
+    /**
+     * Media Files containing various properties of file eg. Bitmap,File Size,File Path,File bytes,File Uri.
+     * @param context Activity context
+     * @param selectedImageUri Image Uri
+     * @return MediaFiles
+     */
     public static MediaFiles getMediaFiles(Context context, Uri selectedImageUri) {
         MediaFiles mediaFiles = new MediaFiles();
         try {
@@ -87,7 +94,8 @@ public class MediaFiles {
     }
 
     /**
-     * @param context          Application context
+     * Get Image Bitmap
+     * @param context Application context
      * @param selectedImageUri Uri
      * @return Image Bitmap
      */
@@ -199,7 +207,6 @@ public class MediaFiles {
 
     /**
      * Get File Provider to make file available to share to other apps.
-     *
      * @param context Application context
      * @return File Provider Uri.
      */
@@ -215,7 +222,7 @@ public class MediaFiles {
     /**
      * Insert Image data into file
      *
-     * @param uri    Uri Image
+     * @param uri Uri Image
      * @param bitmap Bitmap image to be inserted into file
      */
     public static void insertImageIntoFileOutput(Uri uri, Bitmap bitmap) {
@@ -350,7 +357,7 @@ public class MediaFiles {
         } catch (Exception e) {
             if (e instanceof ActivityNotFoundException) {
                 showToastMessage(context, context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
-            } else if (e instanceof FileUriExposedException) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && e instanceof FileUriExposedException) {
                 showToastMessage(context, context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
             } else {
                 showToastMessage(context, context.getString(R.string.str_error), Toast.LENGTH_LONG);
@@ -360,11 +367,10 @@ public class MediaFiles {
 
     /**
      * Create Temporary Image file.
-     *
      * @param context Application context
      * @return Empty Temporary storage file
      */
-    public static File createTempImageFile(Context context, Bitmap bitmap) {
+    public static Uri createTempImageFile(Context context, Bitmap bitmap) {
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
             File file = File.createTempFile(getDefaultImageFileName(false), ".png", storageDir);
@@ -372,7 +378,7 @@ public class MediaFiles {
                 insertImageIntoFileOutput(file, bitmap);
             }
             MediaFiles.cameraPhotoPath = file.getAbsolutePath();
-            return file;
+            return getFileProviderUri(context,file);
         } catch (IOException e) {
             return null;
         }
@@ -399,7 +405,7 @@ public class MediaFiles {
         return bitmap;
     }
 
-    public void setBitmap(Bitmap bitmap) {
+    private void setBitmap(Bitmap bitmap) {
         this.bitmap = bitmap;
     }
 

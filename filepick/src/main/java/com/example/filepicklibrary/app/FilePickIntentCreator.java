@@ -10,7 +10,7 @@ import com.example.filepicklibrary.ui.activity.FilePickActivity;
 import static com.example.filepicklibrary.app.FilePickConstants.REQ_CODE_FILE_PICK;
 
 /**
- * Intent For Launching Activity and Getting Result on onActivity Result.
+ * Class For Launching File Pick Module and Getting Result on onActivity Result.
  * Created by SAKET on 29/03/2020
  */
 public class FilePickIntentCreator {
