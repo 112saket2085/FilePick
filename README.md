@@ -6,7 +6,7 @@ A FilePick library for Android for selecting file from gallery or camera.
 
 It shows Intent of all apps available to handle file request in Bottom Sheet.
 
-[Sample Apk](https://drive.google.com/file/d/15zqqK4Zb8vS2Nt13krn5BNRmq0xyzu9r/view?usp=drivesdk)
+[Sample Apk](https://tinyurl.com/ur25czx)
 
 
 
@@ -28,7 +28,8 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-        implementation 'com.github.112saket2085:FilePickLibrary:v1.0.1'
+       	implementation 'com.github.112saket2085:FilePick:1.0'
+
     }
 ```
 
