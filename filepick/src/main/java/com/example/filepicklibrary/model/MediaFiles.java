@@ -18,17 +18,13 @@ import android.os.FileUriExposedException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
-
 import com.example.filepicklibrary.R;
 import com.example.filepicklibrary.app.AppBuilder;
 import com.example.filepicklibrary.app.FilePickConstants;
-import com.example.filepicklibrary.ui.activity.FilePickActivity;
 import com.example.filepicklibrary.utility.DialogBuilder;
 import com.example.filepicklibrary.utility.PermissionCompatBuilder;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +35,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
-
 import static com.example.filepicklibrary.app.FilePickConstants.FILE_PROVIDER_NAME;
 import static com.example.filepicklibrary.app.FilePickConstants.PNG_FILE_FORMAT;
 
@@ -122,7 +117,7 @@ public class MediaFiles {
      * @param directory Storage Directory
      * @return Image Uri
      */
-    public static Uri insertImage(Activity context, String directory, String fileName, Bitmap bitmap) {
+    public static Uri storeImage(Activity context, String directory, String fileName, Bitmap bitmap) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, TextUtils.isEmpty(fileName) ? getDefaultImageFileName(false) : fileName);
@@ -134,7 +129,7 @@ public class MediaFiles {
             contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
             return uri;
         } else {
-            return insertImageWithStoragePermission(context, directory, fileName, bitmap);
+            return storeImageWithStoragePermission(context, directory, fileName, bitmap);
         }
     }
 
@@ -146,7 +141,7 @@ public class MediaFiles {
      * @param bitmap    Bitmap image to add to file.
      * @return File Uri
      */
-    public static Uri insertImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap) {
+    public static Uri storeImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap) {
         if (PermissionCompatBuilder.checkSelfPermission(AppBuilder.getAppContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             PermissionCompatBuilder.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
             return null;
@@ -339,8 +334,7 @@ public class MediaFiles {
     }
 
     /**
-     * Method to show sharing client installed - Only uri should be file provider uri
-     *
+     * Method to show sharing client installed - Uri should be file provider uri
      * @param context    Application context
      * @param uri        File Provider Uri
      * @param intentType Intent Type

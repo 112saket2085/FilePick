@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -18,8 +17,6 @@ import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.app.FilePickIntentCreator;
 import com.example.filepicklibrary.model.Configuration;
 import com.example.filepicklibrary.model.MediaFiles;
-import java.io.File;
-
 
 
 public class MainActivity extends AppCompatActivity {
@@ -77,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                         Bitmap bitmap = mediaFiles.getBitmap();
                         imageView.setImageBitmap(bitmap);
                         //Use below technique to create image File and insert bitmap in external storage
-                        Uri uri = MediaFiles.insertImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
+                        Uri uri = MediaFiles.storeImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
                         if(uri!=null) {
                             MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
                         }
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         MediaFiles.onRequestPermissionsResult(this, requestCode, permissions, grantResults, new MediaFiles.onPermissionEnabledListener() {
             @Override
             public void onPermissionGranted() {
-                Uri uri = MediaFiles.insertImage(MainActivity.this, "Pictures/Example/", MediaFiles.getDefaultImageFileName(true), mediaFiles.getBitmap());
+                Uri uri = MediaFiles.storeImage(MainActivity.this, "Pictures/Example/", MediaFiles.getDefaultImageFileName(true), mediaFiles.getBitmap());
                 MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
             }
         });
