@@ -109,7 +109,7 @@ Media Files containing various properties of file eg. Bitmap,File Size,File Path
 ```
 Get Image Bitmap 
 ```
-3.Uri insertImage
+3.Uri storeImage
 ```
 Method to add Image in External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
 ```
@@ -123,9 +123,15 @@ Create Temporary Image file.
 ```
 6.Uri getFileProviderUri
 ```
-Get File Provider to make file available to share to other apps.
+Get File Provider Uri to make file available to share to other apps.
 ```
-
+7.void openImageSharingClient
+```
+Method to show sharing client installed.
+```
+```
+And various methods are avialble under MediaFiles class.
+```
 ## Credits
 
 Inspired by [Android Image Cropper](https://github.com/ArthurHub/Android-Image-Cropper)
