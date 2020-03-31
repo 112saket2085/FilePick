@@ -8,4 +8,12 @@
     <string name="str_file_error">Error fetching file.</string>
     <string name="str_error">Something went wrong</string>
     <string name="str_intent_cancel">File request cancel by user.</string>
+    <string name="dialog_btn_ok_text">OK</string>
+    <string name="permisson_allow_button_text">Allow</string>
+    <string name="dialog_cancel_btn_text">Cancel</string>
+    <string name="dialog_title_permission_rational">Permission</string>
+    <string name="permission_external_storage_denied_msg">App needs access to your device storage to capture and select file.Please grant this permission to proceed.</string>
+    <string name="permission_camera_denied_msg">App needs access to your camera to capture and select file.Please grant this permission to proceed.</string>
+    <string name="str_no_external_storage_permission_found">Permission Denied....Please add WRITE_EXTERNAL_STORAGE permission to continue.</string>
+    <string name="str_share">Share</string>
 </resources>

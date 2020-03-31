@@ -1,9 +1,12 @@
 package com.example.filepicklibrary.model;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,20 +18,30 @@ import android.os.FileUriExposedException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
+
 import com.example.filepicklibrary.R;
 import com.example.filepicklibrary.app.AppBuilder;
 import com.example.filepicklibrary.app.FilePickConstants;
+import com.example.filepicklibrary.ui.activity.FilePickActivity;
+import com.example.filepicklibrary.utility.DialogBuilder;
+import com.example.filepicklibrary.utility.PermissionCompatBuilder;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+
 import static com.example.filepicklibrary.app.FilePickConstants.FILE_PROVIDER_NAME;
+import static com.example.filepicklibrary.app.FilePickConstants.PNG_FILE_FORMAT;
 
 /**
  * MediaFiles - Class that store various image results.
@@ -74,7 +87,7 @@ public class MediaFiles {
     }
 
     /**
-     * @param context  Application context
+     * @param context          Application context
      * @param selectedImageUri Uri
      * @return Image Bitmap
      */
@@ -95,37 +108,42 @@ public class MediaFiles {
     }
 
     /**
-     * Method to add Image in External Storage
+     * Method to add Image in External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
      *
      * @param context   Context context
      * @param directory Storage Directory
      * @return Image Uri
      */
-    public static Uri insertImage(Context context, String directory, String fileName,Bitmap bitmap) {
+    public static Uri insertImage(Activity context, String directory, String fileName, Bitmap bitmap) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            String relativeLocation = Environment.DIRECTORY_PICTURES + File.pathSeparator + directory;
             ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, TextUtils.isEmpty(fileName) ? getDefaultImageFileName() : fileName);
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, TextUtils.isEmpty(fileName) ? getDefaultImageFileName(false) : fileName);
             contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, directory);
-            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 1);
-            Uri uri= context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-            insertImageIntoFile(getFileFromUri(uri),bitmap);
+            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
+            Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+            insertImageIntoFileOutput(uri, bitmap);
+            contentValues.clear();
+            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
             return uri;
         } else {
-            return getOutputMediaFile(directory, fileName,bitmap);
+            return insertImageWithStoragePermission(context, directory, fileName, bitmap);
         }
     }
 
     /**
-     * Method to save Image into External Storage upto Android P(Android SDK 28)
+     * Method to save Image into External Storage upto Android P(Android SDK 28) using WRITE_EXTERNAL_PERMISSION needed
+     *
      * @param directory Storage Directory
-     * @param fileName File Name
-     * @param bitmap Bitmap image to add to file.
+     * @param fileName  File Name
+     * @param bitmap    Bitmap image to add to file.
      * @return File Uri
      */
-    public static Uri getOutputMediaFile(String directory,String fileName,Bitmap bitmap) {
-        File mediaStorageDir = new File(Environment.getExternalStorageDirectory() + directory);
+    public static Uri insertImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap) {
+        if (PermissionCompatBuilder.checkSelfPermission(AppBuilder.getAppContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            PermissionCompatBuilder.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
+            return null;
+        }
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory() + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory));
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
@@ -133,13 +151,45 @@ public class MediaFiles {
             }
         }
         // Create a media file name
-        File file=new File(mediaStorageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName() :fileName));
-        insertImageIntoFile(file,bitmap);
-        return getFileProviderUri(AppBuilder.getAppContext(),file);
+        File file = new File(mediaStorageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName(true) : fileName));
+        insertImageIntoFileOutput(file, bitmap);
+        return getFileProviderUri(AppBuilder.getAppContext(), file);
     }
+
+    public static void onRequestPermissionsResult(final Activity activity, int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults, onPermissionEnabledListener listener) {
+        switch (requestCode) {
+            case PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (listener != null) {
+                        listener.onPermissionGranted();
+                    }
+                } else if (PermissionCompatBuilder.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    PermissionCompatBuilder.showRequestPermissionRationaleDialog(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE, activity.getString(R.string.permission_external_storage_denied_msg), new PermissionCompatBuilder.RationalDialogCallback() {
+                        @Override
+                        public void allowedRequest(String permission) {
+                            PermissionCompatBuilder.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
+                        }
+
+                        @Override
+                        public void deniedRequest(String permission) {
+                            DialogBuilder.dismissDialog();
+                        }
+                    }, false);
+                } else {
+                    PermissionCompatBuilder.showPermissionDeniedDialog(activity, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE, activity.getString(R.string.permission_external_storage_denied_msg));
+                }
+                break;
+        }
+    }
+
+    public interface onPermissionEnabledListener {
+        void onPermissionGranted();
+    }
+
 
     /**
      * Get File From uri
+     *
      * @param uri File uri
      * @return File
      */
@@ -148,15 +198,54 @@ public class MediaFiles {
     }
 
     /**
+     * Get File Provider to make file available to share to other apps.
+     *
+     * @param context Application context
+     * @return File Provider Uri.
+     */
+    public static Uri getFileProviderUri(Context context, File file) {
+        Uri photoURI = null;
+        if (file != null) {
+            photoURI = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, file);
+        }
+        return photoURI;
+    }
+
+
+    /**
      * Insert Image data into file
-     * @param file Image file
+     *
+     * @param uri    Uri Image
      * @param bitmap Bitmap image to be inserted into file
      */
-    public static void insertImageIntoFile(File file,Bitmap bitmap) {
+    public static void insertImageIntoFileOutput(Uri uri, Bitmap bitmap) {
+        OutputStream imageOut = null;
+        try {
+            imageOut = AppBuilder.getAppContext().getContentResolver().openOutputStream(uri);
+            if (bitmap != null) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, imageOut);
+            }
+            if (imageOut != null) {
+                imageOut.flush();
+                imageOut.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
+    /**
+     * Insert Image data into file
+     *
+     * @param file   Image file
+     * @param bitmap Bitmap image to be inserted into file
+     */
+    public static void insertImageIntoFileOutput(File file, Bitmap bitmap) {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
-            if(bitmap!=null) {
+            if (bitmap != null) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
             }
             fos.flush();
@@ -168,12 +257,24 @@ public class MediaFiles {
 
 
     /**
-     *  Get Default Image File Name
+     * Get Default Image File Name
+     *
+     * @param requireImageFormatSuffix Image Format to be appended eg. png,jpg
      * @return Image File Name
      */
-    public static String getDefaultImageFileName() {
+    public static String getDefaultImageFileName(boolean requireImageFormatSuffix) {
         String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(new Date());
-        return "JPEG_" + timeStamp + "_"+".jpg";
+        return "JPEG_" + timeStamp + (requireImageFormatSuffix ? PNG_FILE_FORMAT : "");
+    }
+
+    /**
+     * Get Default Image File Name
+     *
+     * @param imageFormatSuffix Image Format to be appended eg. png,jpg
+     * @return Image File Name
+     */
+    public static String getDefaultImageFileName(String imageFormatSuffix) {
+        return getDefaultImageFileName(false) + imageFormatSuffix;
     }
 
     private static String getFilePath(Context context, Uri selectedImageUri) {
@@ -251,7 +352,7 @@ public class MediaFiles {
                 showToastMessage(context, context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
             } else if (e instanceof FileUriExposedException) {
                 showToastMessage(context, context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
-            }else {
+            } else {
                 showToastMessage(context, context.getString(R.string.str_error), Toast.LENGTH_LONG);
             }
         }
@@ -263,30 +364,18 @@ public class MediaFiles {
      * @param context Application context
      * @return Empty Temporary storage file
      */
-    public static File createEmptyTempImageFile(Context context) {
-        String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+    public static File createTempImageFile(Context context, Bitmap bitmap) {
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
-            File file = File.createTempFile(imageFileName, ".jpg", storageDir);
+            File file = File.createTempFile(getDefaultImageFileName(false), ".png", storageDir);
+            if (bitmap != null) {
+                insertImageIntoFileOutput(file, bitmap);
+            }
             MediaFiles.cameraPhotoPath = file.getAbsolutePath();
             return file;
         } catch (IOException e) {
             return null;
         }
-    }
-
-    /**
-     * Get File Provider to make file available to share to other apps.
-     * @param context Application context
-     * @return File Provider Uri.
-     */
-    public static Uri getFileProviderUri(Context context,File file) {
-        Uri photoURI = null;
-        if (file != null) {
-            photoURI = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, file);
-        }
-        return photoURI;
     }
 
 

@@ -1,32 +1,31 @@
 package com.example.filepick;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.app.FilePickIntentCreator;
 import com.example.filepicklibrary.model.Configuration;
 import com.example.filepicklibrary.model.MediaFiles;
-
 import java.io.File;
-import java.io.FileOutputStream;
 
-import static com.example.filepicklibrary.model.MediaFiles.getOutputMediaFile;
-import static com.example.filepicklibrary.model.MediaFiles.insertImage;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Button buttonAdd;
-    private Button buttonShareFile;
     private MediaFiles mediaFiles;
 
     @Override
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         imageView=findViewById(R.id.image_view);
         buttonAdd=findViewById(R.id.button_add);
-        buttonShareFile=findViewById(R.id.button_share);
         setOnClickListener();
     }
 
@@ -47,12 +45,24 @@ public class MainActivity extends AppCompatActivity {
                 FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,builder);
             }
         });
-        buttonShareFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MediaFiles.openImageSharingClient(MainActivity.this,mediaFiles.getUri(),FilePickConstants.IMAGE_INTENT_TYPE);
-            }
-        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_options,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_share:
+                if (mediaFiles != null) {
+                    MediaFiles.openImageSharingClient(MainActivity.this, mediaFiles.getUri(), FilePickConstants.IMAGE_INTENT_TYPE);
+                }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -63,12 +73,14 @@ public class MainActivity extends AppCompatActivity {
                 case RESULT_OK:
                     mediaFiles = FilePickIntentCreator.getFilePickSuccessResult(data);
                     if (mediaFiles != null) {
-                        buttonShareFile.setVisibility(View.VISIBLE);
+                        // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
                         Bitmap bitmap = mediaFiles.getBitmap();
                         imageView.setImageBitmap(bitmap);
-                        //Method to create File in external storage
-                        Uri uri = insertImage(this,"/SaketBhai", "",mediaFiles.getBitmap());
-                        MediaFiles.openImageSharingClient(MainActivity.this,uri,FilePickConstants.IMAGE_INTENT_TYPE);
+                        //Use below technique to create image File and insert bitmap in external storage
+                        Uri uri = MediaFiles.insertImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
+                        if(uri!=null) {
+                            MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
+                        }
                     }
                     break;
                 case RESULT_CANCELED:
@@ -77,5 +89,18 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //Use below technique to request WRITE_EXTERNAL_STORAGE permission and create file
+        MediaFiles.onRequestPermissionsResult(this, requestCode, permissions, grantResults, new MediaFiles.onPermissionEnabledListener() {
+            @Override
+            public void onPermissionGranted() {
+                Uri uri = MediaFiles.insertImage(MainActivity.this, "Pictures/Example/", MediaFiles.getDefaultImageFileName(true), mediaFiles.getBitmap());
+                MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
+            }
+        });
     }
 }

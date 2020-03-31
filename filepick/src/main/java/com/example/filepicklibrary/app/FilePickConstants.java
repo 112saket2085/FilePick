@@ -17,7 +17,9 @@ public interface FilePickConstants {
     String FILE_PICK_ERROR = "error";
     int ERROR_CODE_FILE_PICK_ = 106; //Error in fetching file
     int REQ_CODE_FILE_PICK = 103;
-
-
-
+    String DOWNLOAD_FOLDER="Downloads";
+    String PICTURE_FOLDER="Pictures";
+    String DCIM_FOLDER="/DCIM";
+    String PNG_FILE_FORMAT=".png";
+    String JPG_FILE_FORMAT=".jpg";
 }

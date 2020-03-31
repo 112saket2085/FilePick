@@ -194,7 +194,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
     }
 
     private void launchCamera(Intent intent) {
-        Uri photoURI = MediaFiles.getFileProviderUri(this,MediaFiles.createEmptyTempImageFile(this));
+        Uri photoURI = MediaFiles.getFileProviderUri(this,MediaFiles.createTempImageFile(this,null));
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
