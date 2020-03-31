@@ -6,5 +6,6 @@
     <string name="str_no_sharing">No Sharing Client Installed.</string>
     <string name="uri_exposed_exception">Error....Not a file provider uri</string>
     <string name="str_file_error">Error fetching file.</string>
+    <string name="str_error">Something went wrong</string>
     <string name="str_intent_cancel">File request cancel by user.</string>
 </resources>

@@ -189,28 +189,12 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         launchGallery(intent);
     }
 
-//    private boolean checkCameraPermission() {
-//        if (PermissionCompatBuilder.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-//            PermissionCompatBuilder.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
-//            return false;
-//        }
-//        return true;
-//    }
-
-//    private boolean checkExternalStoragePermission() {
-//        if (PermissionCompatBuilder.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//            PermissionCompatBuilder.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
-//            return false;
-//        }
-//        return true;
-//    }
-
     private void launchGallery(Intent intent) {
         startActivityForResult(intent, INTENT_FILE_PICK);
     }
 
     private void launchCamera(Intent intent) {
-        Uri photoURI = MediaFiles.getCameraFileProviderUri(this);
+        Uri photoURI = MediaFiles.getFileProviderUri(this,MediaFiles.createEmptyTempImageFile(this));
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
