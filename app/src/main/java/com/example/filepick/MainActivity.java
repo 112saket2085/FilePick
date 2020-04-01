@@ -9,7 +9,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,7 +24,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Button buttonAdd;
+    private TextView textViewFileName;
+    private TextView textViewFilePath;
     private MediaFiles mediaFiles;
+    private int selectedViewId;
+    private Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         imageView=findViewById(R.id.image_view);
         buttonAdd=findViewById(R.id.button_add);
+        textViewFileName=findViewById(R.id.textViewFileName);
+        textViewFilePath=findViewById(R.id.textViewFilePath);
         setOnClickListener();
     }
 
@@ -38,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Configuration builder=new Configuration.Builder().setCropRequired(false).setAspectRatioX(1).setAspectRatioY(1).build();
+                Configuration builder=new Configuration.Builder().setCropRequired(true).setAspectRatioX(1).setAspectRatioY(1).build();
                 FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,builder);
             }
         });
@@ -46,16 +53,31 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu=menu;
         getMenuInflater().inflate(R.menu.menu_options,menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        selectedViewId=item.getItemId();
         switch (item.getItemId()) {
             case R.id.item_share:
                 if (mediaFiles != null) {
-                    MediaFiles.openImageSharingClient(MainActivity.this, mediaFiles.getUri(), FilePickConstants.IMAGE_INTENT_TYPE);
+                    //Use below technique to create image File and insert bitmap in external storage
+                    Uri uri = MediaFiles.storeImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
+                    if (uri != null) {
+                        MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
+                    }
+                }
+                break;
+            case R.id.item_download:
+                if (mediaFiles != null) {
+                    //Use below technique to create image File and insert bitmap in external storage
+                    Uri uri = MediaFiles.storeImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
+                    if(uri!=null) {
+                    MediaFiles.showToastMessage(this,"File Stored in Pictures/Example/ folder", Toast.LENGTH_LONG);
+                  }
                 }
                 break;
         }
@@ -73,11 +95,8 @@ public class MainActivity extends AppCompatActivity {
                         // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
                         Bitmap bitmap = mediaFiles.getBitmap();
                         imageView.setImageBitmap(bitmap);
-                        //Use below technique to create image File and insert bitmap in external storage
-                        Uri uri = MediaFiles.storeImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
-                        if(uri!=null) {
-                            MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
-                        }
+                        textViewFileName.setText(getString(R.string.str_file_name_detail,mediaFiles.getFileName()));
+                        textViewFilePath.setText(getString(R.string.str_file_path_detail,mediaFiles.getFilePath()));
                     }
                     break;
                 case RESULT_CANCELED:
@@ -96,8 +115,7 @@ public class MainActivity extends AppCompatActivity {
         MediaFiles.onRequestPermissionsResult(this, requestCode, permissions, grantResults, new MediaFiles.onPermissionEnabledListener() {
             @Override
             public void onPermissionGranted() {
-                Uri uri = MediaFiles.storeImage(MainActivity.this, "Pictures/Example/", MediaFiles.getDefaultImageFileName(true), mediaFiles.getBitmap());
-                MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
+              onOptionsItemSelected(menu.findItem(selectedViewId));
             }
         });
     }

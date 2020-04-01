@@ -6,8 +6,9 @@
         <item android:id="@+id/item_share"
             android:title="@string/str_share"
             app:showAsAction="never"/>
-
-
+        <item android:id="@+id/item_download"
+            android:title="@string/str_download"
+            app:showAsAction="never"/>
 
     </group>
 

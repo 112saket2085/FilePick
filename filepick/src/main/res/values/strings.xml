@@ -16,4 +16,5 @@
     <string name="permission_camera_denied_msg">App needs access to your camera to capture and select file.Please grant this permission to proceed.</string>
     <string name="str_no_external_storage_permission_found">Permission Denied....Please add WRITE_EXTERNAL_STORAGE permission to continue.</string>
     <string name="str_share">Share</string>
+    <string name="str_download">Download</string>
 </resources>

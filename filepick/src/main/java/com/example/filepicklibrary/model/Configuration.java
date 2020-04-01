@@ -10,7 +10,7 @@ import static com.example.filepicklibrary.app.FilePickConstants.IMAGE_INTENT_TYP
  */
 public class Configuration implements Serializable {
 
-    private boolean isCropRequired = true;
+    private boolean isCropRequired = false;
     private int aspectRatioX = -1;
     private int aspectRatioY = -1;
     private String intentType = IMAGE_INTENT_TYPE;

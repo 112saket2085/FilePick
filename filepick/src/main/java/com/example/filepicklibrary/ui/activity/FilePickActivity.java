@@ -35,6 +35,7 @@ import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
+import static android.provider.MediaStore.EXTRA_OUTPUT;
 import static com.example.filepicklibrary.app.FilePickConstants.ERROR_CODE_FILE_PICK_;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_TEXT;
@@ -208,14 +209,14 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
             case INTENT_FILE_PICK:
                 if (resultCode == RESULT_OK) {
                     Uri selectedImageUri;
-                    if (data != null) {
+                    if (data != null && data.getData()!=null) {
                         selectedImageUri = data.getData();
                     } else {
                         selectedImageUri = Uri.fromFile(new File(MediaFiles.getCameraPhotoPath()));
                     }
                     if (data!=null && !TextUtils.isEmpty(data.getAction()) && data.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE) && configuration.isCropRequired()) {
                         openCropperActivity(selectedImageUri);
-                    } else if (MediaFiles.isImageFile(this,selectedImageUri) && configuration.isCropRequired()) {
+                    } else if (configuration.isCropRequired() && MediaFiles.isImageFile(this,selectedImageUri)) {
                         openCropperActivity(selectedImageUri);
                     } else {
                         setFilePickSuccessResult(selectedImageUri);
