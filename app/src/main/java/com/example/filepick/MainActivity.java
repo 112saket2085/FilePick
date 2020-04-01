@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.item_enable_crop:
-                item.setCheckable(!item.isChecked());
                 item.setChecked(!item.isChecked());
                 isCropRequired=item.isChecked();
                 break;
