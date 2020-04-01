@@ -9,6 +9,12 @@
         <item android:id="@+id/item_download"
             android:title="@string/str_download"
             app:showAsAction="never"/>
+        <item android:id="@+id/item_enable_crop"
+            android:title="@string/enable_Crop"
+            android:checkable="false"
+            android:checked="false"
+            app:actionViewClass="com.google.android.material.checkbox.MaterialCheckBox"
+            app:showAsAction="never"/>
 
     </group>
 

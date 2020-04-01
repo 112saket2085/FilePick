@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private MediaFiles mediaFiles;
     private int selectedViewId;
     private Menu menu;
+    private boolean isCropRequired;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Configuration builder=new Configuration.Builder().setCropRequired(true).setAspectRatioX(1).setAspectRatioY(1).build();
+                Configuration builder=new Configuration.Builder().setCropRequired(isCropRequired).setAspectRatioX(1).setAspectRatioY(1).build();
                 FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,builder);
             }
         });
@@ -79,6 +80,11 @@ public class MainActivity extends AppCompatActivity {
                     MediaFiles.showToastMessage(this,"File Stored in Pictures/Example/ folder", Toast.LENGTH_LONG);
                   }
                 }
+                break;
+            case R.id.item_enable_crop:
+                item.setCheckable(!item.isChecked());
+                item.setChecked(!item.isChecked());
+                isCropRequired=item.isChecked();
                 break;
         }
         return super.onOptionsItemSelected(item);
