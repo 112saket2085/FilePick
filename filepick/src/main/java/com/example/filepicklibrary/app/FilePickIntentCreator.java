@@ -26,7 +26,7 @@ public class FilePickIntentCreator {
     public static MediaFiles getFilePickSuccessResult(Intent data) {
         if (data != null) {
             Uri uri = data.getParcelableExtra(FilePickConstants.FILE_PICK_SUCCESS);
-            return MediaFiles.getMediaFiles(AppBuilder.getInstance(), uri);
+            return MediaFiles.getMediaFiles(uri);
 
         }
         return null;

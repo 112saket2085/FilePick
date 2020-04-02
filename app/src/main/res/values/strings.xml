@@ -2,4 +2,5 @@
     <string name="app_name">FilePick</string>
     <string name="str_file_name_detail">"File Name : %s  "</string>
     <string name="str_file_path_detail">File Path : %s</string>
+    <string name="str_file_size_detail">File Size : %s</string>
 </resources>

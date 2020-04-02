@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +20,8 @@ import com.example.filepicklibrary.app.FilePickIntentCreator;
 import com.example.filepicklibrary.model.Configuration;
 import com.example.filepicklibrary.model.MediaFiles;
 
+import java.io.File;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonAdd;
     private TextView textViewFileName;
     private TextView textViewFilePath;
+    private TextView textViewFileSize;
     private MediaFiles mediaFiles;
     private int selectedViewId;
     private Menu menu;
@@ -35,11 +39,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initViews();
+        setOnClickListener();
+    }
+
+    private void initViews() {
         imageView=findViewById(R.id.image_view);
         buttonAdd=findViewById(R.id.button_add);
         textViewFileName=findViewById(R.id.textViewFileName);
         textViewFilePath=findViewById(R.id.textViewFilePath);
-        setOnClickListener();
+        textViewFileSize =findViewById(R.id.textViewFileSie);
     }
 
     private void setOnClickListener() {
@@ -99,9 +108,22 @@ public class MainActivity extends AppCompatActivity {
                     if (mediaFiles != null) {
                         // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
                         Bitmap bitmap = mediaFiles.getBitmap();
-                        imageView.setImageBitmap(bitmap);
-                        textViewFileName.setText(getString(R.string.str_file_name_detail,mediaFiles.getFileName()));
-                        textViewFilePath.setText(getString(R.string.str_file_path_detail,mediaFiles.getFilePath()));
+                        MediaFiles.loadImageUriUsingGlide(imageView, mediaFiles.getUri(), R.mipmap.ic_launcher, new MediaFiles.GlideListener() {
+                            @Override
+                            public void onLoadFailed(@Nullable Exception e, Object model, boolean isFirstResource) {
+                            }
+
+                            @Override
+                            public void onResourceReady(Bitmap resource, Object model, boolean isFirstResource) {
+                            }
+                        });
+                        textViewFileName.setText(getString(R.string.str_file_name_detail, mediaFiles.getFileName()));
+                        textViewFilePath.setText(getString(R.string.str_file_path_detail, mediaFiles.getFilePath()));
+                        textViewFileSize.setText(getString(R.string.str_file_size_detail, mediaFiles.getFileSize()));
+                        //Image Compression
+                        File compressedFile = MediaFiles.getCompressFile(mediaFiles.getFile());
+                        String size=MediaFiles.getFileSize(compressedFile);
+                        Log.d("size is",""+size);
                     }
                     break;
                 case RESULT_CANCELED:
