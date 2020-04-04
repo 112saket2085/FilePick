@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewFileName.setText(getString(R.string.str_file_name_detail, mediaFiles.getFileName()));
                         textViewFilePath.setText(getString(R.string.str_file_path_detail, mediaFiles.getFilePath()));
                         textViewFileSize.setText(getString(R.string.str_file_size_detail, mediaFiles.getFileSize()));
-                        getValue();
+                        //getValue();
                     }
                     break;
                 case RESULT_CANCELED:
