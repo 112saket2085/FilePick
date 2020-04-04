@@ -9,6 +9,10 @@
         <item android:id="@+id/item_download"
             android:title="@string/str_download"
             app:showAsAction="never"/>
+        <item android:id="@+id/item_compress"
+            android:title="@string/str_compress"
+            app:showAsAction="never"/>
+
         <item android:id="@+id/item_enable_crop"
             android:title="@string/enable_Crop"
             android:checkable="true"

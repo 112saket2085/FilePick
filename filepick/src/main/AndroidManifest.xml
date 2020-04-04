@@ -3,6 +3,7 @@
     package="com.example.filepicklibrary">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:name=".app.AppBuilder"
@@ -17,7 +18,7 @@
 
         <provider
             android:name=".utility.UtilityFileProvider"
-            android:authorities="${applicationId}.fileProvider"
+            android:authorities="${applicationId}.fileProvidersfileProviderfileProvidersfileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

@@ -1,5 +1,7 @@
 package com.example.filepicklibrary.ui.activity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,16 +18,20 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.filepicklibrary.R;
+import com.example.filepicklibrary.app.AppBuilder;
 import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.model.Configuration;
 import com.example.filepicklibrary.model.FileItemModel;
 import com.example.filepicklibrary.model.MediaFiles;
 import com.example.filepicklibrary.ui.adapter.FileItemAdapter;
+import com.example.filepicklibrary.utility.DialogBuilder;
+import com.example.filepicklibrary.utility.PermissionCompatBuilder;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.theartofdev.edmodo.cropper.CropImage;
 
@@ -54,9 +60,8 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
     private List<Drawable> fileIconList = new ArrayList<>();
     private RecyclerView recyclerView;
     private FileItemAdapter fileItemAdapter;
-    private Intent fileIntent;
-    private String cameraPhotoPath;
     private Configuration configuration = new Configuration();
+    private Intent resultingIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -180,6 +185,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
     @Override
     public void onBottomSheetClick(Intent intent) {
+        this.resultingIntent=intent;
         if(bottomSheetDialog!=null) {
             bottomSheetDialog.dismiss();
         }
@@ -191,16 +197,54 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
     }
 
     private void launchGallery(Intent intent) {
+        if(PermissionCompatBuilder.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION);
+            return;
+        }
         startActivityForResult(intent, INTENT_FILE_PICK);
     }
 
+
     private void launchCamera(Intent intent) {
-        Uri photoURI = MediaFiles.createTempImageFile(this,null);
+        Uri photoURI = MediaFiles.createTempImageFile(null);
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
         startActivityForResult(intent, INTENT_FILE_PICK);
     }
+
+
+    /**
+     * Added Read External Storage Permission to grant access to file for File Compression and for using File to laod image using GLide
+     * @param requestCode RequestCode
+     * @param permissions Permissions
+     * @param grantResults Grant Results
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    onBottomSheetClick(resultingIntent);
+                } else if (PermissionCompatBuilder.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    PermissionCompatBuilder.showRequestPermissionRationaleDialog(this, Manifest.permission.READ_EXTERNAL_STORAGE, getString(R.string.permission_read_external_storage_denied_msg), new PermissionCompatBuilder.RationalDialogCallback() {
+                        @Override
+                        public void allowedRequest(String permission) {
+                            PermissionCompatBuilder.requestPermissions(FilePickActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION);
+                        }
+
+                        @Override
+                        public void deniedRequest(String permission) {
+                            DialogBuilder.dismissDialog();
+                        }
+                    }, false);
+                } else {
+                    PermissionCompatBuilder.showPermissionDeniedDialog(this, PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION, getString(R.string.permission_read_external_storage_denied_msg));
+                }
+                break;
+        }
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -216,7 +260,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
                     }
                     if (data!=null && !TextUtils.isEmpty(data.getAction()) && data.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE) && configuration.isCropRequired()) {
                         openCropperActivity(selectedImageUri);
-                    } else if (configuration.isCropRequired() && MediaFiles.isImageFile(this,selectedImageUri)) {
+                    } else if (configuration.isCropRequired() && MediaFiles.isImageFile(selectedImageUri)) {
                         openCropperActivity(selectedImageUri);
                     } else {
                         setFilePickSuccessResult(selectedImageUri);
@@ -239,7 +283,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }
@@ -248,15 +292,15 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         switch (resultCode) {
             case RESULT_FIRST_USER:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
             case RESULT_CANCELED:
                 setFilePickCancelled();
-                MediaFiles.showToastMessage(this,getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
                 break;
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }

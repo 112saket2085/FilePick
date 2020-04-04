@@ -13,6 +13,6 @@
         name="files"
         path="." />
     <external-media-path
-        name="external-media"
+        name="external_media"
         path="." />
 </paths>

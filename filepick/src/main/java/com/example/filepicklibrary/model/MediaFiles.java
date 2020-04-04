@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageDecoder;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -18,10 +20,12 @@ import android.os.Environment;
 import android.os.FileUriExposedException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -35,6 +39,7 @@ import com.example.filepicklibrary.utility.DialogBuilder;
 import com.example.filepicklibrary.utility.PermissionCompatBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,9 +48,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
-
 import id.zelory.compressor.Compressor;
-
 import static com.example.filepicklibrary.app.FilePickConstants.FILE_PROVIDER_NAME;
 import static com.example.filepicklibrary.app.FilePickConstants.PNG_FILE_FORMAT;
 
@@ -55,7 +58,6 @@ import static com.example.filepicklibrary.app.FilePickConstants.PNG_FILE_FORMAT;
  */
 public class MediaFiles {
 
-    private Bitmap bitmap;
     private File file;
     private String filePath = "";
     private String fileName = "";
@@ -73,13 +75,12 @@ public class MediaFiles {
     public static MediaFiles getMediaFiles(Uri selectedImageUri) {
         MediaFiles mediaFiles = new MediaFiles();
         try {
-            Context context = AppBuilder.getInstance();
-            mediaFiles.bitmap = getBitmap(context, selectedImageUri);
             mediaFiles.file = getFileFromUri(selectedImageUri);
-            mediaFiles.filePath = getFilePath(context, selectedImageUri);
-            mediaFiles.fileName = getFileName(context, selectedImageUri);
+            mediaFiles.filePath = getFilePath(selectedImageUri);
+            mediaFiles.fileName = getFileName(selectedImageUri);
             mediaFiles.fileSize = getFileSize(mediaFiles.file);
             mediaFiles.uri = selectedImageUri;
+
             return mediaFiles;
         } catch (Exception e) {
             return mediaFiles;
@@ -87,28 +88,44 @@ public class MediaFiles {
     }
 
     /**
-     * Get Image Bitmap
-     *
-     * @param context          Application context
+     * Get Image Bitmap - Use this method to get Bitmap on onActivity Result otherwise you will get Security Exception.
+     * You can also use @link(getBitmap(File file) to get Bitmap.
+     * Life of Uri is not too long to perform operations.
+     * Dont use this method if
      * @param selectedImageUri Uri
      * @return Image Bitmap
      */
-
-    public static Bitmap getBitmap(Context context, Uri selectedImageUri) {
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    public static Bitmap getBitmap(Uri selectedImageUri) {
+        Context context = AppBuilder.getInstance();
         Bitmap bitmap = null;
         ImageDecoder.Source source = null;
+        source = ImageDecoder.createSource(context.getContentResolver(), selectedImageUri);
         try {
-            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                source = ImageDecoder.createSource(context.getContentResolver(), selectedImageUri);
-                bitmap = ImageDecoder.decodeBitmap(source);
-            } else {
-                bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(selectedImageUri));
-            }
+            bitmap = ImageDecoder.decodeBitmap(source);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+
+    /**
+     * Get Image Bitmap - Use this method to get Bitmap
+     * @param file File
+     * @return Image Bitmap
+     */
+
+    public static Bitmap getBitmap(File file) {
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeStream(new FileInputStream(file));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return bitmap;
     }
+
+
 
     /**
      * Method to add Image in External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
@@ -156,7 +173,7 @@ public class MediaFiles {
         // Create a media file name
         File file = new File(mediaStorageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName(true) : fileName));
         insertImageIntoFileOutput(file, bitmap);
-        return getFileProviderUri(AppBuilder.getAppContext(), file);
+        return getFileProviderUri(file);
     }
 
     public static void onRequestPermissionsResult(final Activity activity, int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults, onPermissionEnabledListener listener) {
@@ -197,16 +214,16 @@ public class MediaFiles {
      * @return File
      */
     public static File getFileFromUri(Uri uri) {
-        return new File(getFilePath(AppBuilder.getInstance(),uri));
+        return new File(getFilePath(uri));
     }
 
     /**
      * Get File Provider to make file available to share to other apps.
      *
-     * @param context Application context
      * @return File Provider Uri.
      */
-    public static Uri getFileProviderUri(Context context, File file) {
+    public static Uri getFileProviderUri(File file) {
+        Context context = AppBuilder.getInstance();
         Uri photoURI = null;
         if (file != null) {
             photoURI = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, file);
@@ -280,11 +297,17 @@ public class MediaFiles {
         return getDefaultImageFileName(false) + imageFormatSuffix;
     }
 
-    private static String getFilePath(Context context, Uri selectedImageUri) {
+    /**
+     * Get File Path
+     * @param selectedImageUri Uri
+     * @return File Path
+     */
+    public static String getFilePath(Uri selectedImageUri) {
+        Context context = AppBuilder.getInstance();
         String filePathName = "";
         try {
             if (selectedImageUri != null) {
-                String[] filePathColumn = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.DISPLAY_NAME};
+                String[] filePathColumn = {"_data", MediaStore.Images.Media.DISPLAY_NAME};
                 Cursor cursor = context.getContentResolver().query(selectedImageUri, filePathColumn, null, null, null);
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
@@ -311,7 +334,13 @@ public class MediaFiles {
         return filePathName;
     }
 
-    private static String getFileName(Context context, Uri selectedImageUri) {
+    /**
+     * Get File Name
+     * @param selectedImageUri Uri
+     * @return File Name
+     */
+    public static String getFileName(Uri selectedImageUri) {
+        Context context = AppBuilder.getInstance();
         String fileName = "";
         try {
             if (selectedImageUri != null) {
@@ -342,9 +371,14 @@ public class MediaFiles {
         return fileName;
     }
 
-    public static boolean isImageFile(Context context, Uri selectedImageUri) {
+    /**
+     * USe this method to check if uri is of type image
+     * @param selectedImageUri Uri
+     * @return true if image file
+     */
+    public static boolean isImageFile(Uri selectedImageUri) {
         final String[] okFileExtensions = new String[]{"jpg", "png", "gif", "jpeg"};
-        String filename = getFileName(context, selectedImageUri);
+        String filename = getFileName(selectedImageUri);
         for (String extension : okFileExtensions) {
             if (filename.toLowerCase().endsWith(extension)) {
                 return true;
@@ -356,11 +390,10 @@ public class MediaFiles {
     /**
      * Method to show sharing client installed - Uri should be file provider uri
      *
-     * @param context    Application context
      * @param uri        File Provider Uri
      * @param intentType Intent Type
      */
-    public static void openImageSharingClient(Context context, Uri uri, String intentType) {
+    public static void openImageSharingClient(Context context,Uri uri, String intentType) {
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         if (uri != null) {
             sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
@@ -371,11 +404,11 @@ public class MediaFiles {
             context.startActivity(Intent.createChooser(sharingIntent, "Share image using"));
         } catch (Exception e) {
             if (e instanceof ActivityNotFoundException) {
-                showToastMessage(context, context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
+                showToastMessage(context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && e instanceof FileUriExposedException) {
-                showToastMessage(context, context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
+                showToastMessage( context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
             } else {
-                showToastMessage(context, context.getString(R.string.str_error), Toast.LENGTH_LONG);
+                showToastMessage(context.getString(R.string.str_error), Toast.LENGTH_LONG);
             }
         }
     }
@@ -383,10 +416,10 @@ public class MediaFiles {
     /**
      * Create Temporary Image file.
      *
-     * @param context Application context
      * @return Empty Temporary storage file
      */
-    public static Uri createTempImageFile(Context context, Bitmap bitmap) {
+    public static Uri createTempImageFile(Bitmap bitmap) {
+        Context context = AppBuilder.getInstance();
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
             File file = File.createTempFile(getDefaultImageFileName(false), ".png", storageDir);
@@ -394,7 +427,7 @@ public class MediaFiles {
                 insertImageIntoFileOutput(file, bitmap);
             }
             MediaFiles.cameraPhotoPath = file.getAbsolutePath();
-            return getFileProviderUri(context, file);
+            return getFileProviderUri(file);
         } catch (IOException e) {
             return null;
         }
@@ -403,12 +436,12 @@ public class MediaFiles {
     /**
      * Method to get File Bytes
      *
-     * @param uri Uri
+     * @param file File file
      * @return File bytes
      * @throws IOException Exception
      */
-    private static byte[] getFileBytes(Uri uri) throws IOException {
-        InputStream inputStream = AppBuilder.getAppContext().getContentResolver().openInputStream(uri);
+    public static byte[] getFileBytes(File file) throws IOException {
+        InputStream inputStream = new FileInputStream(file);
         ByteArrayOutputStream byteBuff = new ByteArrayOutputStream();
         int buffSize = 1024;
         byte[] buff = new byte[buffSize];
@@ -442,48 +475,13 @@ public class MediaFiles {
         }
     }
 
-
-    /**
-     * Get File Sie in Bytes
-     *
-     * @param uri Uri
-     * @return File Sie
-     */
-    public static String getFileSizeInBytes(Uri uri) {
-        File file = new File(Objects.requireNonNull(uri.getPath()));
-        return String.valueOf(file.length());
-    }
-
-    /**
-     * Get File Sie in KB
-     *
-     * @param uri Uri
-     * @return File Sie
-     */
-    public static String getFileSizeInKB(Uri uri) {
-        File file = new File(Objects.requireNonNull(uri.getPath()));
-        return file.length() / 1024 + " " + "KB";
-    }
-
-    /**
-     * Get File Sie in MB
-     *
-     * @param uri Uri
-     * @return File Sie
-     */
-    public static String getFileSizeInMB(Uri uri) {
-        File file = new File(Objects.requireNonNull(uri.getPath()));
-        long fileSizeInKb = file.length() / 1024;
-        return fileSizeInKb / 1024 + " " + "MB";
-    }
-
     /**
      * Load Image using Glide
      * @param imageView ImageView to load image into
      * @param placeholderResId Placeholder Resource
      * @param uri Image Uri
      */
-    public static void loadImageUriUsingGlide(ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
+    public static void loadImageUsingGlide(ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
         loaGlideIntoView(imageView,uri,null,placeholderResId,listener);
     }
 
@@ -492,7 +490,7 @@ public class MediaFiles {
      * @param imageView ImageView to load image into
      * @param file Image File
      */
-    public static void loadImageFileUsingGlide(ImageView imageView, File file, int placeholderResId, final GlideListener listener) {
+    public static void loadImageUsingGlide(ImageView imageView, File file, int placeholderResId, final GlideListener listener) {
         loaGlideIntoView(imageView,null,file,placeholderResId,listener);
     }
 
@@ -523,29 +521,19 @@ public class MediaFiles {
     }
 
     /**
-     * Compress File
+     * Get Compressed File
      * @param file File
-     * @return Compressed File
-     */
-    public static File getCompressFile(File file) {
-        File compressedFile = null;
-        try {
-            compressedFile = new Compressor(AppBuilder.getInstance()).compressToFile(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return compressedFile;
-    }
-
-    /**
-     * Compress File
-     * @param file File
+     * @param quality Image Quality
      * @return Compressed File
      */
     public static File getCompressFile(File file,int quality) {
         File compressedFile = null;
         try {
-            compressedFile = new Compressor(AppBuilder.getInstance()).setQuality(quality).compressToFile(file);
+            Compressor compressor=new Compressor(AppBuilder.getInstance());
+            if (quality != -1) {
+                compressor.setQuality(quality);
+            }
+            compressedFile = compressor.compressToFile(file);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -553,13 +541,18 @@ public class MediaFiles {
     }
 
     /**
-     * Compress File
+     * Get Compressed Bitmap image
      * @param file File
-     * @return Compressed File
+     * @param quality Image Quality
+     * @return Compressed Bitmap image
      */
-    public static Bitmap getCompressedImageBitmap(File file) {
+    public static Bitmap getCompressedImageBitmap(File file,int quality) {
         Bitmap compressedImageBitmap = null;
         try {
+            Compressor compressor=new Compressor(AppBuilder.getInstance());
+            if (quality != -1) {
+                compressor.setQuality(quality);
+            }
             compressedImageBitmap = new Compressor(AppBuilder.getInstance()).compressToBitmap(file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -567,32 +560,53 @@ public class MediaFiles {
         return compressedImageBitmap;
     }
 
-
-
-    public static void showToastMessage(Context context, String msg, int duration) {
-        Toast.makeText(context, msg, duration).show();
+    /**
+     * Get View Bitmap
+     * @param view View
+     * @return Image Bitmap
+     */
+    public static Bitmap getBitmapFromView(View view) {
+        //Define a bitmap with the same size as the view
+        Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        //Bind a canvas to it
+        Canvas canvas = new Canvas(returnedBitmap);
+        //Get the view's background
+        Drawable bgDrawable = view.getBackground();
+        if (bgDrawable != null) {
+            //has background drawable, then draw it on the canvas
+            bgDrawable.draw(canvas);
+        } else {
+            //does not have background drawable, then draw white background on the canvas
+            canvas.drawColor(Color.WHITE);
+        }
+        // draw the view on the canvas
+        view.draw(canvas);
+        //return the bitmap
+        return returnedBitmap;
     }
 
 
-    public Bitmap getBitmap() {
-        return bitmap;
-    }
 
+    /**
+     * Method to show Toast Message
+     * @param msg Message
+     * @param duration Toast.LENGTH_LONG or Toast.LENGTH_SHORT
+     */
+    public static void showToastMessage(String msg, int duration) {
+        Toast.makeText(AppBuilder.getInstance(), msg, duration).show();
+    }
 
     public File getFile() {
         return file;
     }
 
-
     public String getFilePath() {
         return filePath;
     }
 
-
     public String getFileName() {
         return fileName;
     }
-
 
     public String getFileSize() {
         return fileSize;

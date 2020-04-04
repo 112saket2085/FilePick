@@ -3,4 +3,7 @@
     <string name="str_file_name_detail">"File Name : %s  "</string>
     <string name="str_file_path_detail">File Path : %s</string>
     <string name="str_file_size_detail">File Size : %s</string>
+    <string name="str_select_file">Select File by clicking Add Button.</string>
+    <string name="str_file_Stored">File stored in %s</string>
+    <string name="str_file_compressed">File Compressed</string>
 </resources>
