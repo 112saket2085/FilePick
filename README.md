@@ -157,7 +157,7 @@ And various methods are avialble under MediaFiles class.
 
 ## Change log
  
-#1.1
+# 1.1
 ```
 Added is crop required test case in check box.
 Added Set Enable crop option.
@@ -173,7 +173,7 @@ Added READ_EXTERNAL_STORAGE Permission for File Not Found Exception while loadin
 Added various test cases in app.
 All method are written with description.And Technique to use these methods are written in application module MainActivity File Class
 ```
-#1.0
+# 1.0
 ```
 Bottom Sheet with intent of all apps that can handle file request.
 Method to get various File Properties eg. Bitmap,File Size,File Path,File bytes,File Uri.
