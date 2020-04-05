@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FilePickLibrary</string>
+    <string name="app_name">FilePick</string>
     <string name="str_file_path">File Path not found</string>
     <string name="str_file_name">File Name not found</string>
     <string name="str_no_sharing">No Sharing Client Installed.</string>
@@ -20,4 +20,5 @@
     <string name="str_download">Download</string>
     <string name="enable_Crop">Enable Crop</string>
     <string name="str_compress">Compress File</string>
+    <string name="str_file_info">File Info</string>
 </resources>

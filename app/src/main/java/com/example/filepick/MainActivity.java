@@ -1,19 +1,24 @@
 package com.example.filepick;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.app.FilePickIntentCreator;
@@ -28,9 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Button buttonAdd;
-    private TextView textViewFileName;
-    private TextView textViewFilePath;
-    private TextView textViewFileSize;
     private MediaFiles mediaFiles;
     private int selectedViewId;
     private Menu menu;
@@ -49,9 +51,6 @@ public class MainActivity extends AppCompatActivity {
         DOWNLOAD_FOLDER="Pictures/"+getString(R.string.app_name);
         imageView=findViewById(R.id.image_view);
         buttonAdd=findViewById(R.id.button_add);
-        textViewFileName=findViewById(R.id.textViewFileName);
-        textViewFilePath=findViewById(R.id.textViewFilePath);
-        textViewFileSize =findViewById(R.id.textViewFileSie);
     }
 
     private void setOnClickListener() {
@@ -75,6 +74,13 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         selectedViewId = item.getItemId();
         switch (item.getItemId()) {
+            case R.id.item_info:
+                if (mediaFiles == null) {
+                    MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
+                    break;
+                }
+                showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),mediaFiles.getFileSize());
+                break;
             case R.id.item_share:
                 if (mediaFiles == null) {
                     MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
@@ -85,11 +91,9 @@ public class MainActivity extends AppCompatActivity {
 
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmap=MediaFiles.getBitmapFromView(imageView);
-                //Use below technique to create image File and insert bitmap in external storage
-                Uri uri = MediaFiles.storeImage(this, DOWNLOAD_FOLDER, "", bitmap);
-                if (uri != null) {
-                    MediaFiles.openImageSharingClient(this,uri, FilePickConstants.IMAGE_INTENT_TYPE);
-                }
+                //Use below technique to create temp image File and insert bitmap in external storage
+                Uri uri = MediaFiles.createTempBitmapFile(bitmap,"");
+                MediaFiles.openImageSharingClient(this,uri, FilePickConstants.IMAGE_INTENT_TYPE);
                 break;
             case R.id.item_download:
                 if (mediaFiles == null) {
@@ -102,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmapImage=MediaFiles.getBitmapFromView(imageView);
                 //Use below technique to create image File and insert bitmap in external storage
-                Uri imageUri = MediaFiles.storeImage(this, DOWNLOAD_FOLDER, "", bitmapImage);
+                Uri imageUri = MediaFiles.storeImageBitmap(this, DOWNLOAD_FOLDER, "", bitmapImage);
                 if (imageUri != null) {
                     MediaFiles.showToastMessage(getString(R.string.str_file_Stored, DOWNLOAD_FOLDER), Toast.LENGTH_LONG);
                 }
@@ -113,10 +117,10 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
                 //Use below method for Image Compression
-                File compressedFile = MediaFiles.getCompressFile(mediaFiles.getFile(),-1);
+                File compressedFile = MediaFiles.getCompressedImageFile(mediaFiles.getFile(), MediaFiles.getExternalCacheDirectoryPath(this,""), -1, null, -1, -1);
                 loadImage(mediaFiles.getFile());
                 String size = MediaFiles.getFileSize(compressedFile);
-                textViewFileSize.setText(getString(R.string.str_file_size_detail,size));
+                showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),size);
                 MediaFiles.showToastMessage(getString(R.string.str_file_compressed), Toast.LENGTH_LONG);
                 break;
             case R.id.item_enable_crop:
@@ -138,10 +142,7 @@ public class MainActivity extends AppCompatActivity {
                         // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
                         Uri uri=mediaFiles.getUri();
                         loadImage(mediaFiles.getFile());
-                        textViewFileName.setText(getString(R.string.str_file_name_detail, mediaFiles.getFileName()));
-                        textViewFilePath.setText(getString(R.string.str_file_path_detail, mediaFiles.getFilePath()));
-                        textViewFileSize.setText(getString(R.string.str_file_size_detail, mediaFiles.getFileSize()));
-                        //getValue();
+                        // getValue();
                     }
                     break;
                 case RESULT_CANCELED:
@@ -208,4 +209,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void showFileInfoDialog(String filePath,String fileName,String fileSize) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_file_details, (ViewGroup) null);
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setView(view);
+        builder.setCancelable(true);
+        TextView textViewFileName=view.findViewById(R.id.textViewFileName);
+        TextView textViewFilePath=view.findViewById(R.id.textViewFilePath);
+        TextView textViewFileSize =view.findViewById(R.id.textViewFileSie);
+        textViewFileName.setText(getString(R.string.str_file_name_detail, fileName));
+        textViewFilePath.setText(getString(R.string.str_file_path_detail,filePath));
+        textViewFileSize.setText(getString(R.string.str_file_size_detail, fileSize));
+        Dialog dialog=builder.create();
+        dialog.show();
+    }
+
 }

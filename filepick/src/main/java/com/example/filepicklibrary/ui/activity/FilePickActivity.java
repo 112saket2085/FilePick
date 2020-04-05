@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -135,14 +136,17 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         PackageManager packageManager = getPackageManager();
         List<ResolveInfo> listGallery = packageManager.queryIntentActivities(galleryIntent, 0);
         for (ResolveInfo res : listGallery) {
-            Intent intent = new Intent(galleryIntent);
-            fileIconList.add(res.activityInfo.loadIcon(packageManager));
-            String title = res.activityInfo.loadLabel(packageManager).toString();
-            intent.putExtra(INTENT_FILE_TEXT, title);
-            intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-            intent.setPackage(res.activityInfo.packageName);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intents.add(intent);
+            if (!res.activityInfo.packageName.equalsIgnoreCase(FilePickConstants.File_PACKAGE_NAME)) {
+                Intent intent = new Intent(galleryIntent);
+                fileIconList.add(res.activityInfo.loadIcon(packageManager));
+                String title = res.activityInfo.loadLabel(packageManager).toString();
+                String name = res.activityInfo.packageName;
+                intent.putExtra(INTENT_FILE_TEXT, title);
+                intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+                intent.setPackage(res.activityInfo.packageName);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intents.add(intent);
+            }
         }
         return intents;
     }
@@ -206,7 +210,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
 
     private void launchCamera(Intent intent) {
-        Uri photoURI = MediaFiles.createTempImageFile(null);
+        Uri photoURI = MediaFiles.createTempBitmapFile(null,"");
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }

@@ -5,7 +5,8 @@ package com.example.filepicklibrary.app;
  * Created by SAKET on 29/03/2020
  */
 public interface FilePickConstants {
-
+    String File_PACKAGE_NAME="com.android.documentsui";
+    String File_App_NAME="Files";
     String IMAGE_INTENT_TYPE = "image/*";
     String BOTTOM_SHEET_TITLE = "Select File";
     String FILE_PICK_REQUEST = "file_pick_request";

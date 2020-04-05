@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
@@ -75,8 +76,9 @@ public class MediaFiles {
     public static MediaFiles getMediaFiles(Uri selectedImageUri) {
         MediaFiles mediaFiles = new MediaFiles();
         try {
-            mediaFiles.file = getFileFromUri(selectedImageUri);
-            mediaFiles.filePath = getFilePath(selectedImageUri);
+            String path=getFilePath(selectedImageUri);
+            mediaFiles.file = getFileFromPath(path);
+            mediaFiles.filePath = path;
             mediaFiles.fileName = getFileName(selectedImageUri);
             mediaFiles.fileSize = getFileSize(mediaFiles.file);
             mediaFiles.uri = selectedImageUri;
@@ -126,27 +128,42 @@ public class MediaFiles {
     }
 
 
-
     /**
-     * Method to add Image in External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
-     *
+     * Method to add Image into External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
+     * For Android Version P and below @link(storeImageWithStoragePermission() will be called.
      * @param context   Context context
      * @param directory Storage Directory
      * @return Image Uri
      */
-    public static Uri storeImage(Activity context, String directory, String fileName, Bitmap bitmap) {
+    public static Uri storeImageByte(Activity context, String directory, String fileName, byte[] data) {
+        return storeImageIntoFile(context,directory,fileName,null,data);
+    }
+
+    /**
+     * Method to add Image into External Storage (For Android version above Q WRITE_EXTERNAL_PERMISSION is not needed)
+     * For Android Version P and below @link(storeImageWithStoragePermission() will be called.
+     * @param context   Context context
+     * @param directory Storage Directory
+     * @return Image Uri
+     */
+    public static Uri storeImageBitmap(Activity context, String directory, String fileName,Bitmap bitmap) {
+        return storeImageIntoFile(context,directory,fileName,bitmap,null);
+    }
+
+
+    private static Uri storeImageIntoFile(Activity context, String directory, String fileName, Bitmap bitmap,byte[] data) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, TextUtils.isEmpty(fileName) ? getDefaultImageFileName(false) : fileName);
             contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
             Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-            insertImageIntoFileOutput(uri, bitmap);
+            insertImageIntoFileOutput(uri, bitmap,data);
             contentValues.clear();
             contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
             return uri;
         } else {
-            return storeImageWithStoragePermission(context, directory, fileName, bitmap);
+            return storeImageWithStoragePermission(context, directory, fileName, bitmap,data);
         }
     }
 
@@ -158,12 +175,12 @@ public class MediaFiles {
      * @param bitmap    Bitmap image to add to file.
      * @return File Uri
      */
-    public static Uri storeImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap) {
+    private static Uri storeImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap,byte[] data) {
         if (PermissionCompatBuilder.checkSelfPermission(AppBuilder.getAppContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             PermissionCompatBuilder.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
             return null;
         }
-        File mediaStorageDir = new File(Environment.getExternalStorageDirectory() + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory));
+        File mediaStorageDir = new File(getExternalStorageDirectoryPath(AppBuilder.getInstance(),directory));
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
@@ -172,7 +189,7 @@ public class MediaFiles {
         }
         // Create a media file name
         File file = new File(mediaStorageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName(true) : fileName));
-        insertImageIntoFileOutput(file, bitmap);
+        insertImageIntoFileOutput(file, bitmap,data);
         return getFileProviderUri(file);
     }
 
@@ -218,6 +235,16 @@ public class MediaFiles {
     }
 
     /**
+     * Get File From path
+     *
+     * @param path File Path
+     * @return File
+     */
+    public static File getFileFromPath(String path) {
+        return new File(path);
+    }
+
+    /**
      * Get File Provider to make file available to share to other apps.
      *
      * @return File Provider Uri.
@@ -238,14 +265,14 @@ public class MediaFiles {
      * @param uri    Uri Image
      * @param bitmap Bitmap image to be inserted into file
      */
-    public static void insertImageIntoFileOutput(Uri uri, Bitmap bitmap) {
+    public static void insertImageIntoFileOutput(Uri uri, Bitmap bitmap, byte[] data) {
         OutputStream imageOut = null;
         try {
             imageOut = AppBuilder.getAppContext().getContentResolver().openOutputStream(uri);
             if (bitmap != null) {
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, imageOut);
-            }
-            if (imageOut != null) {
+                bitmap.compress(Bitmap.CompressFormat.WEBP, 100, imageOut);
+            } else if (imageOut != null && data != null) {
+                imageOut.write(data);
                 imageOut.flush();
                 imageOut.close();
             }
@@ -261,12 +288,15 @@ public class MediaFiles {
      * @param file   Image file
      * @param bitmap Bitmap image to be inserted into file
      */
-    public static void insertImageIntoFileOutput(File file, Bitmap bitmap) {
+    public static void insertImageIntoFileOutput(File file, Bitmap bitmap,byte[] data) {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
             if (bitmap != null) {
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                bitmap.compress(Bitmap.CompressFormat.WEBP, 100, fos);
+            }
+            else if(data!=null) {
+                fos.write(data);
             }
             fos.flush();
             fos.close();
@@ -340,35 +370,7 @@ public class MediaFiles {
      * @return File Name
      */
     public static String getFileName(Uri selectedImageUri) {
-        Context context = AppBuilder.getInstance();
-        String fileName = "";
-        try {
-            if (selectedImageUri != null) {
-                String[] filePathColumn = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.DISPLAY_NAME};
-                Cursor cursor = context.getContentResolver().query(selectedImageUri, filePathColumn, null, null, null);
-                if (cursor != null) {
-                    if (cursor.moveToFirst()) {
-                        int fileNameIndex = cursor.getColumnIndex(filePathColumn[1]);
-                        if (fileNameIndex != -1) {
-                            fileName = cursor.getString(fileNameIndex);
-                            if (TextUtils.isEmpty(fileName)) {
-                                fileName = selectedImageUri.getLastPathSegment();
-                            }
-                        } else {
-                            fileName = selectedImageUri.getLastPathSegment();
-                        }
-                    }
-                    cursor.close();
-                } else {
-                    fileName = selectedImageUri.getLastPathSegment();
-                }
-            } else {
-                fileName = context.getString(R.string.str_file_name);
-            }
-        } catch (Exception e) {
-            fileName = Objects.requireNonNull(selectedImageUri.getLastPathSegment());
-        }
-        return fileName;
+        return Objects.requireNonNull(selectedImageUri.getLastPathSegment());
     }
 
     /**
@@ -414,23 +416,98 @@ public class MediaFiles {
     }
 
     /**
-     * Create Temporary Image file.
-     *
-     * @return Empty Temporary storage file
+     * Create Temporary Image file,file will be deleted on app uninstall.
+     * @param data byte dta
+     * @return Temporary storage file Uri
      */
-    public static Uri createTempImageFile(Bitmap bitmap) {
+    public static Uri createCacheByteFile(byte[] data,String directory) {
+        File file= createTempFile(null,data,false,directory);
+        return getFileProviderUri(file);
+    }
+
+    /**
+     * Create Temporary Image file,file will be deleted on app uninstall.
+     * @param bitmap Bitmap Image
+     * @param directory File Additional directory
+     * @return Temporary storage file Uri
+     */
+    public static Uri createCacheBitmapFile(Bitmap bitmap,String directory) {
+        File file= createTempFile(bitmap,null,false,directory);
+        return getFileProviderUri(file);
+    }
+
+    /**
+     * Create Temporary Image file,file will be deleted on app uninstall.
+     * @param bitmap Bitmap Image
+     * @param directory File Additional directory
+     * @return Temporary storage file Uri
+     */
+    public static Uri createTempBitmapFile(Bitmap bitmap,String directory) {
+        File file= createTempFile(bitmap,null,true,directory);
+        return getFileProviderUri(file);
+    }
+
+    /**
+     * Create Temporary Image file,file will be deleted on app uninstall.
+     * @param data byte dta
+     * @param directory File Additional directory
+     * @return Temporary storage file Uri
+     */
+    public static Uri createTempByteFile(byte[] data,String directory) {
+        File file= createTempFile(null,data,true,directory);
+        return getFileProviderUri(file);
+    }
+
+    /**
+     * @param bitmap Bitmap Image
+     * @param data byte data
+     * @param directory File Additional directory
+     * @return Temporary File
+     */
+    public static File createTempFile(Bitmap bitmap, byte[] data,boolean isFiesDir,String directory) {
         Context context = AppBuilder.getInstance();
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        try {
-            File file = File.createTempFile(getDefaultImageFileName(false), ".png", storageDir);
-            if (bitmap != null) {
-                insertImageIntoFileOutput(file, bitmap);
+        File storageDir = new File(isFiesDir ? getExternalFilesDirectoryPath(context,directory) : getExternalCacheDirectoryPath(context,directory));
+        if (!storageDir.exists()) {
+            if (!storageDir.mkdirs()) {
+                return null;
             }
+        }
+        try {
+            File file=new File(storageDir.getPath() + File.separator+getDefaultImageFileName(true));
+            insertImageIntoFileOutput(file, bitmap, data);
             MediaFiles.cameraPhotoPath = file.getAbsolutePath();
-            return getFileProviderUri(file);
-        } catch (IOException e) {
+            return file;
+        } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Get External Storage Directory
+     * @param context App Context
+     * @return Directory Path
+     */
+    public static String getExternalStorageDirectoryPath(Context context,String directory) {
+        return Environment.getExternalStorageDirectory() + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
+    }
+
+    /**
+     * Get External Cache Directory
+     * @param context App Context
+     * @return Directory Path
+     */
+    public static String getExternalCacheDirectoryPath(Context context,String directory) {
+        return context.getExternalCacheDir() + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
+    }
+
+    /**
+     * Get External File Directory
+     * @param context App Context
+     * @return Directory Path
+     */
+    public static String getExternalFilesDirectoryPath(Context context,String directory) {
+        return context.getExternalFilesDir("") + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
+
     }
 
     /**
@@ -479,23 +556,45 @@ public class MediaFiles {
      * Load Image using Glide
      * @param imageView ImageView to load image into
      * @param placeholderResId Placeholder Resource
-     * @param uri Image Uri
+     * @param url Url to load
      */
-    public static void loadImageUsingGlide(ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,uri,null,placeholderResId,listener);
+    public static void loadImageUsingGlide(ImageView imageView,String url, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(imageView,null,null,null,url,placeholderResId,listener);
     }
 
     /**
      * Load Image using Glide
      * @param imageView ImageView to load image into
+     * @param placeholderResId Placeholder Resource
+     * @param data byte data
+     */
+    public static void loadImageUsingGlide(ImageView imageView, byte[] data, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(imageView,null,null,data,null,placeholderResId,listener);
+    }
+
+    /**
+     * Load Image using Glide
+     * @param imageView ImageView to load image into
+     * @param placeholderResId Placeholder Resource
+     * @param uri Image Uri
+     */
+    public static void loadImageUsingGlide(ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(imageView,uri,null,null,null,placeholderResId,listener);
+    }
+
+    /**
+     * Load Image using Glide
+     * @param imageView ImageView to load image into
+     * @param placeholderResId Placeholder Resource
      * @param file Image File
      */
     public static void loadImageUsingGlide(ImageView imageView, File file, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,null,file,placeholderResId,listener);
+        loaGlideIntoView(imageView,null,file,null,null,placeholderResId,listener);
     }
 
-    private static void loaGlideIntoView(ImageView imageView, Uri uri, File file, int placeholderResId, final GlideListener listener) {
-        Glide.with(AppBuilder.getInstance()).asBitmap().load(uri != null ? uri : file).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
+    private static void loaGlideIntoView(ImageView imageView, Uri uri, File file, byte[] data,String url, int placeholderResId, final GlideListener listener) {
+        RequestBuilder<Bitmap> bitmapRequestBuilder=Glide.with(AppBuilder.getInstance()).asBitmap();
+        Glide.with(AppBuilder.getInstance()).asBitmap().load(uri != null ? uri : (file != null ? file : (data != null ? data : url))).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
             @Override
             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
                 if (listener != null) {
@@ -520,19 +619,26 @@ public class MediaFiles {
         void onResourceReady(Bitmap resource, Object model, boolean isFirstResource);
     }
 
+
     /**
-     * Get Compressed File
+     * Get Compressed Bitmap image  Set default value to -1 for int variable and null for Object type
      * @param file File
-     * @param quality Image Quality
-     * @return Compressed File
+     * @param destinationDirectoryPath Destination path to insert compressed file
+     * @param quality Image Quality Default set to 100
+     * @param compressFormat Image CompressedFormat Default set to WEBP
+     * @param maxWidth Image Width Default set to 612
+     * @param maxHeight Image Height Default set to 816
+     * @return Compressed Bitmap image
      */
-    public static File getCompressFile(File file,int quality) {
+    public static File getCompressedImageFile(File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
         File compressedFile = null;
         try {
             Compressor compressor=new Compressor(AppBuilder.getInstance());
-            if (quality != -1) {
-                compressor.setQuality(quality);
-            }
+            compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
+            compressor.setQuality(quality == -1 ? 80 : quality);
+            compressor.setCompressFormat(compressFormat == null ? Bitmap.CompressFormat.WEBP : compressFormat);
+            compressor.setMaxWidth(maxWidth == -1 ? 612 : maxWidth );
+            compressor.setMaxHeight(maxHeight == -1 ? 816 : maxHeight);
             compressedFile = compressor.compressToFile(file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -541,19 +647,25 @@ public class MediaFiles {
     }
 
     /**
-     * Get Compressed Bitmap image
+     * Get Compressed Bitmap image   Set default value to -1 for int variable and null for Object type
      * @param file File
-     * @param quality Image Quality
+     * @param destinationDirectoryPath Destination path to insert compressed file
+     * @param quality Image Quality Default set to 100
+     * @param compressFormat Image CompressedFormat Default set to WEBP
+     * @param maxWidth Image Width Default set to 612
+     * @param maxHeight Image Height Default set to 816
      * @return Compressed Bitmap image
      */
-    public static Bitmap getCompressedImageBitmap(File file,int quality) {
+    public static Bitmap getCompressedImageBitmap(File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
         Bitmap compressedImageBitmap = null;
         try {
             Compressor compressor=new Compressor(AppBuilder.getInstance());
-            if (quality != -1) {
-                compressor.setQuality(quality);
-            }
-            compressedImageBitmap = new Compressor(AppBuilder.getInstance()).compressToBitmap(file);
+            compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
+            compressor.setQuality(quality == -1 ? 100 : quality);
+            compressor.setCompressFormat(compressFormat == null ? Bitmap.CompressFormat.WEBP : compressFormat);
+            compressor.setMaxWidth(maxWidth == -1 ? 612 : maxWidth );
+            compressor.setMaxHeight(maxHeight == -1 ? 816 : maxHeight);
+            compressedImageBitmap = compressor.compressToBitmap(file);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -584,7 +696,6 @@ public class MediaFiles {
         //return the bitmap
         return returnedBitmap;
     }
-
 
 
     /**
