@@ -8,6 +8,12 @@ It shows Intent of all apps available to handle file request in Bottom Sheet.
 
 [Sample Apk](https://tinyurl.com/ur25czx)
 
+[New Apk](https://tinyurl.com/tb3ya8x)
+
+[Debug Library](https://tinyurl.com/wjv8a7j)
+
+[Release Library](https://tinyurl.com/wq3y4m6)
+
 
 
 ## Usage
@@ -28,7 +34,7 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-       	implementation 'com.github.112saket2085:FilePick:1.0'
+       	implementation 'com.github.112saket2085:FilePick:1.1'
 
     }
 ```
@@ -52,23 +58,22 @@ Step 5: Receive results in onActivityResult(...).
                     mediaFiles = FilePickIntentCreator.getFilePickSuccessResult(data);
                     if (mediaFiles != null) {
                         // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
-                        Bitmap bitmap = mediaFiles.getBitmap();
-                        imageView.setImageBitmap(bitmap);
-                        //Use below technique to create image File and insert bitmap in external storage
-                        Uri uri = MediaFiles.insertImage(this, "Pictures/Example/", "", mediaFiles.getBitmap());
-                        if(uri!=null) {
-                            MediaFiles.openImageSharingClient(MainActivity.this, uri, FilePickConstants.IMAGE_INTENT_TYPE);
-                        }
-                    }
+                        Uri uri=mediaFiles.getUri();
+                        loadImage(mediaFiles.getFile());
+                        textViewFileName.setText(getString(R.string.str_file_name_detail, mediaFiles.getFileName()));
+                        textViewFilePath.setText(getString(R.string.str_file_path_detail, mediaFiles.getFilePath()));
+                        textViewFileSize.setText(getString(R.string.str_file_size_detail, mediaFiles.getFileSize()));
+                     }
                     break;
                 case RESULT_CANCELED:
                     break;
                 case RESULT_FIRST_USER:
-                    int errorCode=FilePickIntentCreator.getFilePickErrorResult(data);
+                    int errorCode = FilePickIntentCreator.getFilePickErrorResult(data);
                     break;
             }
         }
     }
+
 
 ```
 
@@ -104,11 +109,11 @@ Set is cropping required. Default cropping is set to false.
 
 1. MediaFiles getMediaFiles
 ```
-Media Files containing various properties of file eg. Bitmap,File Size,File Path,File bytes,File Uri.
+Media Files containing various properties of file eg. File,File Size,File Path,File Uri.
 ```
 2. Bitmap getBitmap
 ```
-Get Image Bitmap 
+Get Image Bitmap using Uri or file
 ```
 3.Uri storeImage
 ```
@@ -130,9 +135,56 @@ Get File Provider Uri to make file available to share to other apps.
 ```
 Method to show sharing client installed.
 ```
+7.void loadImageUsingGlide
+```
+Method to load Image using Glide.
+```
+8.void getCompressFile
+```
+Method to Get Compressed File.
+```
+9.void getCompressedImageBitmap
+```
+Method to Get Compressed Bitmap Image.
+```
+10.void getBitmapFromView
+```
+Method to Get Bitmap from View.
+```
 ```
 And various methods are avialble under MediaFiles class.
 ```
+
+## Change log
+ 
+## 1.1
+```
+Added is crop required test case in check box.
+Added Set Enable crop option.
+Removed byte array,file provider uri from sending data with mediafiles.
+Added Image Laoding with Glide.
+Added File Compression.
+Added File Size.
+Added Method for Bitmap Compression,Removed Get Bitmap from mediaFile.Get Bitmap from MediaFiles static method getBitmap.
+Added technique for File compression.
+Added technique for getting Bitmap image and byte Array.
+Added Method to get Btimap Image From View.Added Get Bitmap using File parameter and Get Byte Array using File parameter.
+Added READ_EXTERNAL_STORAGE Permission for File Not Found Exception while loading file using Glide or compressing File.
+Added various test cases in app.
+All method are written with description.And Technique to use these methods are written in application module MainActivity File Class
+```
+## 1.0
+```
+Bottom Sheet with intent of all apps that can handle file request.
+Method to get various File Properties eg. Bitmap,File Size,File Path,File bytes,File Uri.
+Method to add and store Image into specific directory.(Along with Android Q file creation methods).
+Method to create temp file.
+Method to get File Provider Uri to make file available to share to others apps.
+Method to show sharing client installed.
+Method to get Bitmap from uri.
+Method to show WRITE_EXTERNAL_SORAGE permission dialog.
+```
+
 ## Credits
 
 Inspired by [Android Image Cropper](https://github.com/ArthurHub/Android-Image-Cropper)
