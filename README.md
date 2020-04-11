@@ -34,7 +34,7 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-       	implementation 'com.github.112saket2085:FilePick:1.1'
+       	implementation 'com.github.112saket2085:FilePick:1.2'
 
     }
 ```
