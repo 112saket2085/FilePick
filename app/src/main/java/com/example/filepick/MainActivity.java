@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Configuration builder=new Configuration.Builder().setCropRequired(isCropRequired).setAspectRatioX(1).setAspectRatioY(1).build();
-                FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,builder);
+                Configuration configuration=new Configuration.Builder().setCropRequired(isCropRequired).setAspectRatioX(1).setAspectRatioY(1).build();
+                FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,configuration);
             }
         });
     }

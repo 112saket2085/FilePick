@@ -8,11 +8,11 @@ It shows Intent of all apps available to handle file request in Bottom Sheet.
 
 [Sample Apk](https://tinyurl.com/ur25czx)
 
-[New Apk](https://tinyurl.com/tb3ya8x)
+[New Apk](https://tinyurl.com/tnlaer2)
 
-[Debug Library](https://tinyurl.com/wjv8a7j)
+[Debug Library](https://tinyurl.com/rlntpp8)
 
-[Release Library](https://tinyurl.com/wq3y4m6)
+[Release Library](https://tinyurl.com/w7pvaz3)
 
 
 
@@ -41,8 +41,9 @@ Step 2: Add the dependency
 
 Step 4: Launch FilePicker module using below method.
 ```bash
-     Configuration builder=new Configuration.Builder().setCropRequired(false).setAspectRatioX(1).setAspectRatioY(1).build();
-     FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,builder);
+     Configuration configuration=new Configuration.Builder().setCropRequired(false).setAspectRatioX(1).setAspectRatioY(1).build();
+     FilePickIntentCreator.loadFilePickerRequest(activity,configuration);
+     FilePickIntentCreator.loadFilePickerRequest(fragment,context,configuration);
 
 ```
 
