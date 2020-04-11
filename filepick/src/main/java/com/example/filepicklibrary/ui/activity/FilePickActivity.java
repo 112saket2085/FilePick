@@ -1,7 +1,6 @@
 package com.example.filepicklibrary.ui.activity;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +23,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.filepicklibrary.R;
-import com.example.filepicklibrary.app.AppBuilder;
 import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.model.Configuration;
 import com.example.filepicklibrary.model.FileItemModel;
@@ -42,7 +39,6 @@ import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
-import static android.provider.MediaStore.EXTRA_OUTPUT;
 import static com.example.filepicklibrary.app.FilePickConstants.ERROR_CODE_FILE_PICK_;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_TEXT;
@@ -210,7 +206,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
 
     private void launchCamera(Intent intent) {
-        Uri photoURI = MediaFiles.createTempBitmapFile(null,"");
+        Uri photoURI = MediaFiles.createTempBitmapFile(this,null,"");
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
@@ -287,7 +283,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }
@@ -296,15 +292,15 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         switch (resultCode) {
             case RESULT_FIRST_USER:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
             case RESULT_CANCELED:
                 setFilePickCancelled();
-                MediaFiles.showToastMessage(getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(this,getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
                 break;
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(getString(R.string.str_file_error), Toast.LENGTH_SHORT);
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }

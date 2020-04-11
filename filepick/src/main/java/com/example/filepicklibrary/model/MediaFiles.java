@@ -34,7 +34,6 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.filepicklibrary.R;
-import com.example.filepicklibrary.app.AppBuilder;
 import com.example.filepicklibrary.app.FilePickConstants;
 import com.example.filepicklibrary.utility.DialogBuilder;
 import com.example.filepicklibrary.utility.PermissionCompatBuilder;
@@ -73,10 +72,10 @@ public class MediaFiles {
      * @param selectedImageUri Image Uri
      * @return MediaFiles
      */
-    public static MediaFiles getMediaFiles(Uri selectedImageUri) {
+    public static MediaFiles getMediaFiles(Context context,Uri selectedImageUri) {
         MediaFiles mediaFiles = new MediaFiles();
         try {
-            String path=getFilePath(selectedImageUri);
+            String path=getFilePath(context,selectedImageUri);
             mediaFiles.file = getFileFromPath(path);
             mediaFiles.filePath = path;
             mediaFiles.fileName = getFileName(selectedImageUri);
@@ -98,8 +97,7 @@ public class MediaFiles {
      * @return Image Bitmap
      */
     @RequiresApi(api = Build.VERSION_CODES.P)
-    public static Bitmap getBitmap(Uri selectedImageUri) {
-        Context context = AppBuilder.getInstance();
+    public static Bitmap getBitmap(Context context,Uri selectedImageUri) {
         Bitmap bitmap = null;
         ImageDecoder.Source source = null;
         source = ImageDecoder.createSource(context.getContentResolver(), selectedImageUri);
@@ -158,7 +156,7 @@ public class MediaFiles {
             contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
             Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-            insertImageIntoFileOutput(uri, bitmap,data);
+            insertImageIntoFileOutput(context,uri, bitmap,data);
             contentValues.clear();
             contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
             return uri;
@@ -176,11 +174,11 @@ public class MediaFiles {
      * @return File Uri
      */
     private static Uri storeImageWithStoragePermission(Activity activity, String directory, String fileName, Bitmap bitmap,byte[] data) {
-        if (PermissionCompatBuilder.checkSelfPermission(AppBuilder.getAppContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (PermissionCompatBuilder.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             PermissionCompatBuilder.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionCompatBuilder.Code.REQ_CODE_WRITE_STORAGE);
             return null;
         }
-        File mediaStorageDir = new File(getExternalStorageDirectoryPath(AppBuilder.getInstance(),directory));
+        File mediaStorageDir = new File(getExternalStorageDirectoryPath(activity,directory));
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
@@ -190,7 +188,7 @@ public class MediaFiles {
         // Create a media file name
         File file = new File(mediaStorageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName(true) : fileName));
         insertImageIntoFileOutput(file, bitmap,data);
-        return getFileProviderUri(file);
+        return getFileProviderUri(activity,file);
     }
 
     public static void onRequestPermissionsResult(final Activity activity, int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults, onPermissionEnabledListener listener) {
@@ -230,8 +228,8 @@ public class MediaFiles {
      * @param uri File uri
      * @return File
      */
-    public static File getFileFromUri(Uri uri) {
-        return new File(getFilePath(uri));
+    public static File getFileFromUri(Context context,Uri uri) {
+        return new File(getFilePath(context,uri));
     }
 
     /**
@@ -249,8 +247,7 @@ public class MediaFiles {
      *
      * @return File Provider Uri.
      */
-    public static Uri getFileProviderUri(File file) {
-        Context context = AppBuilder.getInstance();
+    public static Uri getFileProviderUri(Context context,File file) {
         Uri photoURI = null;
         if (file != null) {
             photoURI = FileProvider.getUriForFile(context, context.getPackageName() + FILE_PROVIDER_NAME, file);
@@ -265,10 +262,10 @@ public class MediaFiles {
      * @param uri    Uri Image
      * @param bitmap Bitmap image to be inserted into file
      */
-    public static void insertImageIntoFileOutput(Uri uri, Bitmap bitmap, byte[] data) {
+    public static void insertImageIntoFileOutput(Context context,Uri uri, Bitmap bitmap, byte[] data) {
         OutputStream imageOut = null;
         try {
-            imageOut = AppBuilder.getAppContext().getContentResolver().openOutputStream(uri);
+            imageOut = context.getContentResolver().openOutputStream(uri);
             if (bitmap != null) {
                 bitmap.compress(Bitmap.CompressFormat.WEBP, 100, imageOut);
             } else if (imageOut != null && data != null) {
@@ -332,8 +329,7 @@ public class MediaFiles {
      * @param selectedImageUri Uri
      * @return File Path
      */
-    public static String getFilePath(Uri selectedImageUri) {
-        Context context = AppBuilder.getInstance();
+    public static String getFilePath(Context context,Uri selectedImageUri) {
         String filePathName = "";
         try {
             if (selectedImageUri != null) {
@@ -406,11 +402,11 @@ public class MediaFiles {
             context.startActivity(Intent.createChooser(sharingIntent, "Share image using"));
         } catch (Exception e) {
             if (e instanceof ActivityNotFoundException) {
-                showToastMessage(context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
+                showToastMessage(context,context.getString(R.string.str_no_sharing), Toast.LENGTH_LONG);
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && e instanceof FileUriExposedException) {
-                showToastMessage( context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
+                showToastMessage( context,context.getString(R.string.uri_exposed_exception), Toast.LENGTH_LONG);
             } else {
-                showToastMessage(context.getString(R.string.str_error), Toast.LENGTH_LONG);
+                showToastMessage(context,context.getString(R.string.str_error), Toast.LENGTH_LONG);
             }
         }
     }
@@ -420,9 +416,9 @@ public class MediaFiles {
      * @param data byte dta
      * @return Temporary storage file Uri
      */
-    public static Uri createCacheByteFile(byte[] data,String directory) {
-        File file= createTempFile(null,data,false,directory);
-        return getFileProviderUri(file);
+    public static Uri createCacheByteFile(Context context,byte[] data,String directory) {
+        File file= createTempFile(context,null,data,false,directory);
+        return getFileProviderUri(context,file);
     }
 
     /**
@@ -431,9 +427,9 @@ public class MediaFiles {
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createCacheBitmapFile(Bitmap bitmap,String directory) {
-        File file= createTempFile(bitmap,null,false,directory);
-        return getFileProviderUri(file);
+    public static Uri createCacheBitmapFile(Context context,Bitmap bitmap,String directory) {
+        File file= createTempFile(context,bitmap,null,false,directory);
+        return getFileProviderUri(context,file);
     }
 
     /**
@@ -442,9 +438,9 @@ public class MediaFiles {
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createTempBitmapFile(Bitmap bitmap,String directory) {
-        File file= createTempFile(bitmap,null,true,directory);
-        return getFileProviderUri(file);
+    public static Uri createTempBitmapFile(Context context,Bitmap bitmap,String directory) {
+        File file= createTempFile(context,bitmap,null,true,directory);
+        return getFileProviderUri(context,file);
     }
 
     /**
@@ -453,9 +449,9 @@ public class MediaFiles {
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createTempByteFile(byte[] data,String directory) {
-        File file= createTempFile(null,data,true,directory);
-        return getFileProviderUri(file);
+    public static Uri createTempByteFile(Context context,byte[] data,String directory) {
+        File file= createTempFile(context,null,data,true,directory);
+        return getFileProviderUri(context,file);
     }
 
     /**
@@ -464,8 +460,7 @@ public class MediaFiles {
      * @param directory File Additional directory
      * @return Temporary File
      */
-    public static File createTempFile(Bitmap bitmap, byte[] data,boolean isFiesDir,String directory) {
-        Context context = AppBuilder.getInstance();
+    public static File createTempFile(Context context,Bitmap bitmap, byte[] data,boolean isFiesDir,String directory) {
         File storageDir = new File(isFiesDir ? getExternalFilesDirectoryPath(context,directory) : getExternalCacheDirectoryPath(context,directory));
         if (!storageDir.exists()) {
             if (!storageDir.mkdirs()) {
@@ -558,8 +553,8 @@ public class MediaFiles {
      * @param placeholderResId Placeholder Resource
      * @param url Url to load
      */
-    public static void loadImageUsingGlide(ImageView imageView,String url, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,null,null,null,url,placeholderResId,listener);
+    public static void loadImageUsingGlide(Context context,ImageView imageView,String url, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(context,imageView,null,null,null,url,placeholderResId,listener);
     }
 
     /**
@@ -568,8 +563,8 @@ public class MediaFiles {
      * @param placeholderResId Placeholder Resource
      * @param data byte data
      */
-    public static void loadImageUsingGlide(ImageView imageView, byte[] data, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,null,null,data,null,placeholderResId,listener);
+    public static void loadImageUsingGlide(Context context,ImageView imageView, byte[] data, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(context,imageView,null,null,data,null,placeholderResId,listener);
     }
 
     /**
@@ -578,8 +573,8 @@ public class MediaFiles {
      * @param placeholderResId Placeholder Resource
      * @param uri Image Uri
      */
-    public static void loadImageUsingGlide(ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,uri,null,null,null,placeholderResId,listener);
+    public static void loadImageUsingGlide(Context context,ImageView imageView, Uri uri, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(context,imageView,uri,null,null,null,placeholderResId,listener);
     }
 
     /**
@@ -588,13 +583,13 @@ public class MediaFiles {
      * @param placeholderResId Placeholder Resource
      * @param file Image File
      */
-    public static void loadImageUsingGlide(ImageView imageView, File file, int placeholderResId, final GlideListener listener) {
-        loaGlideIntoView(imageView,null,file,null,null,placeholderResId,listener);
+    public static void loadImageUsingGlide(Context context,ImageView imageView, File file, int placeholderResId, final GlideListener listener) {
+        loaGlideIntoView(context,imageView,null,file,null,null,placeholderResId,listener);
     }
 
-    private static void loaGlideIntoView(ImageView imageView, Uri uri, File file, byte[] data,String url, int placeholderResId, final GlideListener listener) {
-        RequestBuilder<Bitmap> bitmapRequestBuilder=Glide.with(AppBuilder.getInstance()).asBitmap();
-        Glide.with(AppBuilder.getInstance()).asBitmap().load(uri != null ? uri : (file != null ? file : (data != null ? data : url))).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
+    private static void loaGlideIntoView(Context context,ImageView imageView, Uri uri, File file, byte[] data,String url, int placeholderResId, final GlideListener listener) {
+        RequestBuilder<Bitmap> bitmapRequestBuilder=Glide.with(context).asBitmap();
+        Glide.with(context).asBitmap().load(uri != null ? uri : (file != null ? file : (data != null ? data : url))).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
             @Override
             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
                 if (listener != null) {
@@ -630,10 +625,10 @@ public class MediaFiles {
      * @param maxHeight Image Height Default set to 816
      * @return Compressed Bitmap image
      */
-    public static File getCompressedImageFile(File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
+    public static File getCompressedImageFile(Context context,File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
         File compressedFile = null;
         try {
-            Compressor compressor=new Compressor(AppBuilder.getInstance());
+            Compressor compressor=new Compressor(context);
             compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
             compressor.setQuality(quality == -1 ? 80 : quality);
             compressor.setCompressFormat(compressFormat == null ? Bitmap.CompressFormat.WEBP : compressFormat);
@@ -656,10 +651,10 @@ public class MediaFiles {
      * @param maxHeight Image Height Default set to 816
      * @return Compressed Bitmap image
      */
-    public static Bitmap getCompressedImageBitmap(File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
+    public static Bitmap getCompressedImageBitmap(Context context,File file,String destinationDirectoryPath,int quality,Bitmap.CompressFormat compressFormat,int maxWidth,int maxHeight) {
         Bitmap compressedImageBitmap = null;
         try {
-            Compressor compressor=new Compressor(AppBuilder.getInstance());
+            Compressor compressor=new Compressor(context);
             compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
             compressor.setQuality(quality == -1 ? 100 : quality);
             compressor.setCompressFormat(compressFormat == null ? Bitmap.CompressFormat.WEBP : compressFormat);
@@ -703,8 +698,8 @@ public class MediaFiles {
      * @param msg Message
      * @param duration Toast.LENGTH_LONG or Toast.LENGTH_SHORT
      */
-    public static void showToastMessage(String msg, int duration) {
-        Toast.makeText(AppBuilder.getInstance(), msg, duration).show();
+    public static void showToastMessage(Context context,String msg, int duration) {
+        Toast.makeText(context, msg, duration).show();
     }
 
     public File getFile() {

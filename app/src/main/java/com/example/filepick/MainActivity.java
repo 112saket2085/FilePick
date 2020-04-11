@@ -76,14 +76,14 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.item_info:
                 if (mediaFiles == null) {
-                    MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_select_file), Toast.LENGTH_LONG);
                     break;
                 }
                 showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),mediaFiles.getFileSize());
                 break;
             case R.id.item_share:
                 if (mediaFiles == null) {
-                    MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_select_file), Toast.LENGTH_LONG);
                     break;
                 }
                 //Use below method to get compressed Bitmap image
@@ -92,12 +92,12 @@ public class MainActivity extends AppCompatActivity {
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmap=MediaFiles.getBitmapFromView(imageView);
                 //Use below technique to create temp image File and insert bitmap in external storage
-                Uri uri = MediaFiles.createTempBitmapFile(bitmap,"");
+                Uri uri = MediaFiles.createTempBitmapFile(this,bitmap,"");
                 MediaFiles.openImageSharingClient(this,uri, FilePickConstants.IMAGE_INTENT_TYPE);
                 break;
             case R.id.item_download:
                 if (mediaFiles == null) {
-                    MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_select_file), Toast.LENGTH_LONG);
                     break;
                 }
                 //Use below method to get compressed Bitmap image
@@ -108,20 +108,20 @@ public class MainActivity extends AppCompatActivity {
                 //Use below technique to create image File and insert bitmap in external storage
                 Uri imageUri = MediaFiles.storeImageBitmap(this, DOWNLOAD_FOLDER, "", bitmapImage);
                 if (imageUri != null) {
-                    MediaFiles.showToastMessage(getString(R.string.str_file_Stored, DOWNLOAD_FOLDER), Toast.LENGTH_LONG);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_file_Stored, DOWNLOAD_FOLDER), Toast.LENGTH_LONG);
                 }
                 break;
             case R.id.item_compress:
                 if (mediaFiles == null) {
-                    MediaFiles.showToastMessage(getString(R.string.str_select_file), Toast.LENGTH_LONG);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_select_file), Toast.LENGTH_LONG);
                     break;
                 }
                 //Use below method for Image Compression
-                File compressedFile = MediaFiles.getCompressedImageFile(mediaFiles.getFile(), MediaFiles.getExternalCacheDirectoryPath(this,""), -1, null, -1, -1);
+                File compressedFile = MediaFiles.getCompressedImageFile(this,mediaFiles.getFile(), MediaFiles.getExternalCacheDirectoryPath(this,""), -1, null, -1, -1);
                 loadImage(mediaFiles.getFile());
                 String size = MediaFiles.getFileSize(compressedFile);
                 showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),size);
-                MediaFiles.showToastMessage(getString(R.string.str_file_compressed), Toast.LENGTH_LONG);
+                MediaFiles.showToastMessage(this,getString(R.string.str_file_compressed), Toast.LENGTH_LONG);
                 break;
             case R.id.item_enable_crop:
                 item.setChecked(!item.isChecked());
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == FilePickConstants.REQ_CODE_FILE_PICK) {
             switch (resultCode) {
                 case RESULT_OK:
-                    mediaFiles = FilePickIntentCreator.getFilePickSuccessResult(data);
+                    mediaFiles = FilePickIntentCreator.getFilePickSuccessResult(this,data);
                     if (mediaFiles != null) {
                         // Get various Image file output eg. Bitmap,File Size,File Path,File bytes,File Uri.
                         Uri uri=mediaFiles.getUri();
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
      * @param file File
      */
     private void loadImage(File file) {
-        MediaFiles.loadImageUsingGlide(imageView, file, -1, new MediaFiles.GlideListener() {
+        MediaFiles.loadImageUsingGlide(this,imageView, file, -1, new MediaFiles.GlideListener() {
             @Override
             public void onLoadFailed(@Nullable Exception e, Object model, boolean isFirstResource) {
             }
@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
     private Bitmap getBitmap() {
         Bitmap bitmap;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            bitmap = MediaFiles.getBitmap(mediaFiles.getUri()); //If Security Exception occurs, you can also use @link(MediaFiles.getBitmap(File file) to get Bitmap.
+            bitmap = MediaFiles.getBitmap(this,mediaFiles.getUri()); //If Security Exception occurs, you can also use @link(MediaFiles.getBitmap(File file) to get Bitmap.
         } else {
             bitmap = MediaFiles.getBitmap(mediaFiles.getFile());
         }
