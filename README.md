@@ -157,7 +157,22 @@ And various methods are avialble under MediaFiles class.
 ```
 
 ## Change log
- 
+
+## 1.2
+```
+Added support for adding file bytes into file.
+Added support for more glide loading options.
+Added support for inserting image in cache directory.
+Added support for storing compressed file into destination path.
+Added support for getting storage directory for different path.
+Removed File App from Bottom Sheet for not getting proper file.
+Added File Info in toolbar.
+Removed AppBuilder application class
+Added support to launch file pick library from fragment
+Removed AppBuilder Context and added context as parameter in every method
+Removed AppBuilder from android:name
+
+```
 ## 1.1
 ```
 Added is crop required test case in check box.
