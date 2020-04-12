@@ -8,11 +8,11 @@ It shows Intent of all apps available to handle file request in Bottom Sheet.
 
 [Sample Apk](https://tinyurl.com/ur25czx)
 
-[New Apk](https://tinyurl.com/tnlaer2)
+[New Apk](https://tinyurl.com/yx2ohmbh)
 
-[Debug Library](https://tinyurl.com/rlntpp8)
+[Debug Library](https://tinyurl.com/ujst2rn)
 
-[Release Library](https://tinyurl.com/w7pvaz3)
+[Release Library](https://tinyurl.com/vu6k6an)
 
 
 
@@ -158,6 +158,13 @@ And various methods are avialble under MediaFiles class.
 
 ## Change log
 
+## 1.3
+
+```
+Added File name from file object Added changes in isImageFile method
+Removed Action_GET_CONTENT and Added Action_Pick and handled read storage permission denied result
+
+```
 ## 1.2
 ```
 Added support for adding file bytes into file.
