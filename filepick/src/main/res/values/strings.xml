@@ -14,8 +14,7 @@
     <string name="dialog_title_permission_rational">Permission</string>
     <string name="permission_external_storage_denied_msg">App needs access to your device storage to create file.Please grant this permission to proceed.</string>
     <string name="permission_read_external_storage_denied_msg">App needs access to your device storage to read file.Please grant this permission to proceed.</string>
-    <string name="permission_camera_denied_msg">App needs access to your camera to capture and select file.Please grant this permission to proceed.</string>
-    <string name="str_no_external_storage_permission_found">Permission Denied....Please add WRITE_EXTERNAL_STORAGE permission to continue.</string>
+    <string name="str_permission_denied">Permission denied by user.</string>
     <string name="str_share">Share</string>
     <string name="str_download">Download</string>
     <string name="enable_Crop">Enable Crop</string>

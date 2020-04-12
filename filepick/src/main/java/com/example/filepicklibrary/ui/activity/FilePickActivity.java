@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
@@ -38,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Intent.ACTION_GET_CONTENT;
+import static android.content.Intent.ACTION_PICK;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static com.example.filepicklibrary.app.FilePickConstants.ERROR_CODE_FILE_PICK_;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
@@ -124,7 +128,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
      */
     public List<Intent> getGalleryIntents() {
         List<Intent> intents = new ArrayList<>();
-        Intent galleryIntent = new Intent(ACTION_GET_CONTENT);
+        Intent galleryIntent = new Intent(ACTION_PICK);
         galleryIntent.setType(configuration.getIntentType());
         if(configuration.getIntentType().equalsIgnoreCase(FilePickConstants.FILE_INTENT_TYPE)) {
             galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -132,18 +136,17 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         PackageManager packageManager = getPackageManager();
         List<ResolveInfo> listGallery = packageManager.queryIntentActivities(galleryIntent, 0);
         for (ResolveInfo res : listGallery) {
-            if (!res.activityInfo.packageName.equalsIgnoreCase(FilePickConstants.File_PACKAGE_NAME)) {
-                Intent intent = new Intent(galleryIntent);
-                fileIconList.add(res.activityInfo.loadIcon(packageManager));
-                String title = res.activityInfo.loadLabel(packageManager).toString();
-                String name = res.activityInfo.packageName;
-                intent.putExtra(INTENT_FILE_TEXT, title);
-                intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-                intent.setPackage(res.activityInfo.packageName);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intents.add(intent);
-            }
+            Intent intent = new Intent(galleryIntent);
+            fileIconList.add(res.activityInfo.loadIcon(packageManager));
+            String title = res.activityInfo.loadLabel(packageManager).toString();
+            String name = res.activityInfo.packageName;
+            intent.putExtra(INTENT_FILE_TEXT, title);
+            intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+            intent.setPackage(res.activityInfo.packageName);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intents.add(intent);
         }
+
         return intents;
     }
 
@@ -215,7 +218,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
 
     /**
-     * Added Read External Storage Permission to grant access to file for File Compression and for using File to laod image using GLide
+     * Added Read External Storage Permission to grant access to file for File Compression and for using File to load image using Glide
      * @param requestCode RequestCode
      * @param permissions Permissions
      * @param grantResults Grant Results
@@ -236,6 +239,8 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
                         @Override
                         public void deniedRequest(String permission) {
                             DialogBuilder.dismissDialog();
+                            setFilePickErrorResult();
+                            MediaFiles.showToastMessage(FilePickActivity.this,getString(R.string.str_permission_denied), Toast.LENGTH_SHORT);
                         }
                     }, false);
                 } else {
@@ -260,7 +265,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
                     }
                     if (data!=null && !TextUtils.isEmpty(data.getAction()) && data.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE) && configuration.isCropRequired()) {
                         openCropperActivity(selectedImageUri);
-                    } else if (configuration.isCropRequired() && MediaFiles.isImageFile(selectedImageUri)) {
+                    } else if (configuration.isCropRequired() && MediaFiles.isImageFile(this,selectedImageUri)) {
                         openCropperActivity(selectedImageUri);
                     } else {
                         setFilePickSuccessResult(selectedImageUri);

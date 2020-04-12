@@ -78,7 +78,7 @@ public class MediaFiles {
             String path=getFilePath(context,selectedImageUri);
             mediaFiles.file = getFileFromPath(path);
             mediaFiles.filePath = path;
-            mediaFiles.fileName = getFileName(selectedImageUri);
+            mediaFiles.fileName = mediaFiles.file.getName();
             mediaFiles.fileSize = getFileSize(mediaFiles.file);
             mediaFiles.uri = selectedImageUri;
 
@@ -370,13 +370,13 @@ public class MediaFiles {
     }
 
     /**
-     * USe this method to check if uri is of type image
+     * Use this method to check if uri is of type image
      * @param selectedImageUri Uri
      * @return true if image file
      */
-    public static boolean isImageFile(Uri selectedImageUri) {
+    public static boolean isImageFile(Context context,Uri selectedImageUri) {
         final String[] okFileExtensions = new String[]{"jpg", "png", "gif", "jpeg"};
-        String filename = getFileName(selectedImageUri);
+        String filename = getFilePath(context,selectedImageUri);
         for (String extension : okFileExtensions) {
             if (filename.toLowerCase().endsWith(extension)) {
                 return true;
@@ -502,7 +502,6 @@ public class MediaFiles {
      */
     public static String getExternalFilesDirectoryPath(Context context,String directory) {
         return context.getExternalFilesDir("") + File.separator + (TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
-
     }
 
     /**
