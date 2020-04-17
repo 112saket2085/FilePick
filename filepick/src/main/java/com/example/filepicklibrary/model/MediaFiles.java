@@ -44,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -547,6 +548,52 @@ public class MediaFiles {
     }
 
     /**
+     * Get File Sie
+     *
+     * @param file File
+     * @return File size
+     */
+    public static String getFileSizeInBytes(File file) {
+        return String.valueOf(file.length());
+    }
+
+    /**
+     * Get File Sie
+     *
+     * @param file File
+     * @return File size
+     */
+    public static String getFileSizeInKB(File file) {
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        long length = (file.length() / 1024);
+        return decimalFormat.format(length);
+    }
+
+    /**
+     * Get File Sie
+     *
+     * @param file File
+     * @return File size
+     */
+    public static String getFileSizeInMB(File file) {
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        long length = (file.length() / 1024) / 1024;
+        return decimalFormat.format(length);
+    }
+
+    /**
+     * Get File Sie
+     *
+     * @param file File
+     * @return File size
+     */
+    public static String getFileSizeInGB(File file) {
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        long length = (file.length() / 1024) / 1024 / 1024;
+        return decimalFormat.format(length);
+    }
+
+    /**
      * Load Image using Glide
      * @param imageView ImageView to load image into
      * @param placeholderResId Placeholder Resource
@@ -628,7 +675,9 @@ public class MediaFiles {
         File compressedFile = null;
         try {
             Compressor compressor=new Compressor(context);
-            compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
+            if(!TextUtils.isEmpty(destinationDirectoryPath)) {
+                compressor.setDestinationDirectoryPath(TextUtils.isEmpty(destinationDirectoryPath) ? "" : destinationDirectoryPath);
+            }
             compressor.setQuality(quality == -1 ? 80 : quality);
             compressor.setCompressFormat(compressFormat == null ? Bitmap.CompressFormat.WEBP : compressFormat);
             compressor.setMaxWidth(maxWidth == -1 ? 612 : maxWidth );
