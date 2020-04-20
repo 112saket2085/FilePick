@@ -11,10 +11,12 @@ import static com.example.filepicklibrary.app.FilePickConstants.IMAGE_INTENT_TYP
 public class Configuration implements Serializable {
 
     private boolean isCropRequired = false;
+    private boolean isCameraPermissionRequired = false;
     private int aspectRatioX = -1;
     private int aspectRatioY = -1;
     private String intentType = IMAGE_INTENT_TYPE;
     private String bottomSheetTitle = BOTTOM_SHEET_TITLE;
+
 
 
     public static class Builder {
@@ -27,6 +29,10 @@ public class Configuration implements Serializable {
         public Builder setCropRequired(boolean cropRequired) {
             configuration.isCropRequired = cropRequired;
             return this;
+        }
+
+        public void setCameraPermissionRequired(boolean cameraPermissionRequired) {
+            configuration.isCameraPermissionRequired = cameraPermissionRequired;
         }
 
         public Builder setAspectRatioX(int aspectRatioX) {
@@ -56,6 +62,10 @@ public class Configuration implements Serializable {
 
     public boolean isCropRequired() {
         return isCropRequired;
+    }
+
+    public boolean isCameraPermissionRequired() {
+        return isCameraPermissionRequired;
     }
 
     public int getAspectRatioX() {

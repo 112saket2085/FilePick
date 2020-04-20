@@ -30,6 +30,7 @@ import androidx.core.content.FileProvider;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
@@ -634,8 +635,7 @@ public class MediaFiles {
     }
 
     private static void loaGlideIntoView(Context context,ImageView imageView, Uri uri, File file, byte[] data,String url, int placeholderResId, final GlideListener listener) {
-        RequestBuilder<Bitmap> bitmapRequestBuilder=Glide.with(context).asBitmap();
-        Glide.with(context).asBitmap().load(uri != null ? uri : (file != null ? file : (data != null ? data : url))).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
+        Glide.with(context).asBitmap().load(uri != null ? uri : (file != null ? file : (data != null ? data : url))).diskCacheStrategy(DiskCacheStrategy.NONE).skipMemoryCache(true).placeholder(placeholderResId).listener(new RequestListener<Bitmap>() {
             @Override
             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
                 if (listener != null) {

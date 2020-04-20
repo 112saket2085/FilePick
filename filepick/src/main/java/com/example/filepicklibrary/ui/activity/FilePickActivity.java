@@ -209,6 +209,10 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
 
     private void launchCamera(Intent intent) {
+        if(configuration.isCameraPermissionRequired() && PermissionCompatBuilder.checkSelfPermission(this,Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.CAMERA},PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
+            return;
+        }
         Uri photoURI = MediaFiles.createTempBitmapFile(this,null,"");
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
@@ -219,8 +223,9 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
     /**
      * Added Read External Storage Permission to grant access to file for File Compression and for using File to load image using Glide
-     * @param requestCode RequestCode
-     * @param permissions Permissions
+     *
+     * @param requestCode  RequestCode
+     * @param permissions  Permissions
      * @param grantResults Grant Results
      */
     @Override
@@ -240,11 +245,32 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
                         public void deniedRequest(String permission) {
                             DialogBuilder.dismissDialog();
                             setFilePickErrorResult();
-                            MediaFiles.showToastMessage(FilePickActivity.this,getString(R.string.str_permission_denied), Toast.LENGTH_SHORT);
+                            MediaFiles.showToastMessage(FilePickActivity.this, getString(R.string.str_permission_denied), Toast.LENGTH_SHORT);
                         }
                     }, false);
                 } else {
                     PermissionCompatBuilder.showPermissionDeniedDialog(this, PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION, getString(R.string.permission_read_external_storage_denied_msg));
+                }
+                break;
+            case PermissionCompatBuilder.Code.REQ_CODE_CAMERA:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    onBottomSheetClick(resultingIntent);
+                } else if (PermissionCompatBuilder.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                    PermissionCompatBuilder.showRequestPermissionRationaleDialog(this, Manifest.permission.CAMERA, getString(R.string.permission_camera_denied_msg), new PermissionCompatBuilder.RationalDialogCallback() {
+                        @Override
+                        public void allowedRequest(String permission) {
+                            PermissionCompatBuilder.requestPermissions(FilePickActivity.this, new String[]{Manifest.permission.CAMERA}, PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
+                        }
+
+                        @Override
+                        public void deniedRequest(String permission) {
+                            DialogBuilder.dismissDialog();
+                            setFilePickErrorResult();
+                            MediaFiles.showToastMessage(FilePickActivity.this, getString(R.string.str_permission_denied), Toast.LENGTH_SHORT);
+                        }
+                    }, false);
+                } else {
+                    PermissionCompatBuilder.showPermissionDeniedDialog(this, PermissionCompatBuilder.Code.REQ_CODE_CAMERA, getString(R.string.permission_camera_denied_msg));
                 }
                 break;
         }
