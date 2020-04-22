@@ -314,7 +314,6 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }
@@ -323,15 +322,12 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
         switch (resultCode) {
             case RESULT_FIRST_USER:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
             case RESULT_CANCELED:
                 setFilePickCancelled();
-                MediaFiles.showToastMessage(this,getString(R.string.str_intent_cancel), Toast.LENGTH_SHORT);
                 break;
             default:
                 setFilePickErrorResult();
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_error), Toast.LENGTH_SHORT);
                 break;
         }
     }
@@ -345,13 +341,14 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
 
     private void setFilePickCancelled() {
         Intent intent = new Intent();
+        intent.putExtra(FilePickConstants.FILE_PICK_ERROR, getString(R.string.str_intent_cancel));
         setResult(RESULT_CANCELED, intent);
         finish();
     }
 
     private void setFilePickErrorResult() {
         Intent intent = new Intent();
-        intent.putExtra(FilePickConstants.FILE_PICK_ERROR, ERROR_CODE_FILE_PICK_);
+        intent.putExtra(FilePickConstants.FILE_PICK_ERROR, getString(R.string.str_file_error));
         setResult(RESULT_FIRST_USER, intent);
         finish();
     }
