@@ -6,13 +6,11 @@ A FilePick library for Android for selecting file from gallery or camera.
 
 It shows Intent of all apps available to handle file request in Bottom Sheet.
 
-[Sample Apk](https://tinyurl.com/ur25czx)
+[New Apk](https://tinyurl.com/y7bttele)
 
-[New Apk](https://tinyurl.com/yx2ohmbh)
+[Debug Library](https://tinyurl.com/yc57xyy3)
 
-[Debug Library](https://tinyurl.com/ujst2rn)
-
-[Release Library](https://tinyurl.com/vu6k6an)
+[Release Library](https://tinyurl.com/y7nlvxfs)
 
 
 
@@ -34,7 +32,7 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-       	implementation 'com.github.112saket2085:FilePick:1.3'
+       	implementation 'com.github.112saket2085:FilePick:1.6'
 
     }
 ```
@@ -157,6 +155,31 @@ And various methods are avialble under MediaFiles class.
 ```
 
 ## Change log
+
+## 1.6
+
+```
+FilePickActivity.java - Removed unwanted toast message and moved error into respective error code
+
+```
+
+## 1.5
+
+```
+Configuration - Added configuration for camera permission
+MediaFiles - Added changes in Glide methods
+FilePickActivity - Added Camera permission if requested
+strings - Added string for camera denied
+
+```
+
+## 1.4
+
+```
+MediaFiles.java - Added changes in get File size and compressed file
+
+```
+
 
 ## 1.3
 
