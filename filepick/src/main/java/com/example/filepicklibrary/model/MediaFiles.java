@@ -416,43 +416,48 @@ public class MediaFiles {
     /**
      * Create Temporary Image file,file will be deleted on app uninstall.
      * @param data byte dta
+     * @param fileName File Name
+     * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createCacheByteFile(Context context,byte[] data,String directory) {
-        File file= createTempFile(context,null,data,false,directory);
+    public static Uri createCacheByteFile(Context context,byte[] data,String fileName,String directory) {
+        File file= createTempFile(context,null,data,false,fileName,directory);
         return getFileProviderUri(context,file);
     }
 
     /**
      * Create Temporary Image file,file will be deleted on app uninstall.
      * @param bitmap Bitmap Image
+     * @param fileName File Name
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createCacheBitmapFile(Context context,Bitmap bitmap,String directory) {
-        File file= createTempFile(context,bitmap,null,false,directory);
+    public static Uri createCacheBitmapFile(Context context,Bitmap bitmap,String fileName,String directory) {
+        File file= createTempFile(context,bitmap,null,false,fileName,directory);
         return getFileProviderUri(context,file);
     }
 
     /**
      * Create Temporary Image file,file will be deleted on app uninstall.
      * @param bitmap Bitmap Image
+     * @param fileName File Name
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createTempBitmapFile(Context context,Bitmap bitmap,String directory) {
-        File file= createTempFile(context,bitmap,null,true,directory);
+    public static Uri createTempBitmapFile(Context context,Bitmap bitmap,String fileName,String directory) {
+        File file= createTempFile(context,bitmap,null,true,fileName,directory);
         return getFileProviderUri(context,file);
     }
 
     /**
      * Create Temporary Image file,file will be deleted on app uninstall.
      * @param data byte dta
+     * @param fileName File Name
      * @param directory File Additional directory
      * @return Temporary storage file Uri
      */
-    public static Uri createTempByteFile(Context context,byte[] data,String directory) {
-        File file= createTempFile(context,null,data,true,directory);
+    public static Uri createTempByteFile(Context context,byte[] data,String fileName,String directory) {
+        File file= createTempFile(context,null,data,true,fileName,directory);
         return getFileProviderUri(context,file);
     }
 
@@ -462,7 +467,7 @@ public class MediaFiles {
      * @param directory File Additional directory
      * @return Temporary File
      */
-    public static File createTempFile(Context context,Bitmap bitmap, byte[] data,boolean isFiesDir,String directory) {
+    public static File createTempFile(Context context,Bitmap bitmap, byte[] data,boolean isFiesDir,String fileName,String directory) {
         File storageDir = new File(isFiesDir ? getExternalFilesDirectoryPath(context,directory) : getExternalCacheDirectoryPath(context,directory));
         if (!storageDir.exists()) {
             if (!storageDir.mkdirs()) {
@@ -470,7 +475,7 @@ public class MediaFiles {
             }
         }
         try {
-            File file=new File(storageDir.getPath() + File.separator+getDefaultImageFileName(true));
+            File file = new File(storageDir.getPath() + File.separator + (TextUtils.isEmpty(fileName) ? getDefaultImageFileName(true) : fileName));
             insertImageIntoFileOutput(file, bitmap, data);
             MediaFiles.cameraPhotoPath = file.getAbsolutePath();
             return file;
