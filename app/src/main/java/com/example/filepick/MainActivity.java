@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmap=MediaFiles.getBitmapFromView(imageView);
                 //Use below technique to create temp image File and insert bitmap in external storage
-                Uri uri = MediaFiles.createTempBitmapFile(this,bitmap,"");
+                Uri uri = MediaFiles.createTempBitmapFile(this,bitmap,"TEMP_FILE.png","");
                 MediaFiles.openImageSharingClient(this,uri, FilePickConstants.IMAGE_INTENT_TYPE);
                 break;
             case R.id.item_download:

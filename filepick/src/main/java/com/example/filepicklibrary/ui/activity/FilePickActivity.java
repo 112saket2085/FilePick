@@ -213,7 +213,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
             PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.CAMERA},PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
             return;
         }
-        Uri photoURI = MediaFiles.createTempBitmapFile(this,null,"");
+        Uri photoURI = MediaFiles.createTempBitmapFile(this,null,"","");
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
