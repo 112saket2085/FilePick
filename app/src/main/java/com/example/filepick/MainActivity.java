@@ -91,8 +91,21 @@ public class MainActivity extends AppCompatActivity {
 
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmap=MediaFiles.getBitmapFromView(imageView);
-                //Use below technique to create temp image File and insert bitmap in external storage
-                Uri uri = MediaFiles.createTempBitmapFile(this,bitmap,"TEMP_FILE.png","");
+
+                Uri uri = null;
+//                //Use below technique store Image into Pdf File
+                try {
+                     uri = MediaFiles.getImageAsPdf(this,MediaFiles.getExternalCacheDirectoryFile(this,"",MediaFiles.getDefaultPdfFileName()),MediaFiles.getByteFromBitmap(bitmap,Bitmap.CompressFormat.PNG));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+//                //Use below technique to create temp image File and insert bitmap in external storage
+//                try {
+//                    uri = MediaFiles.storeImageIntoAppStorage(this,MediaFiles.getExternalFilesDirectoryFile(this,"","TEMP_FILE.png"),bitmap, Bitmap.CompressFormat.PNG);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
                 MediaFiles.openImageSharingClient(this,uri, FilePickConstants.IMAGE_INTENT_TYPE);
                 break;
             case R.id.item_download:
@@ -106,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 //Use below method to get Bitmap Image From View
                 Bitmap bitmapImage=MediaFiles.getBitmapFromView(imageView);
                 //Use below technique to create image File and insert bitmap in external storage
-                Uri imageUri = MediaFiles.storeImageBitmap(this, DOWNLOAD_FOLDER, "", bitmapImage);
+                Uri imageUri = MediaFiles.storeImageIntoExternalStorage(this, DOWNLOAD_FOLDER, "", bitmapImage,Bitmap.CompressFormat.PNG);
                 if (imageUri != null) {
                     MediaFiles.showToastMessage(this,getString(R.string.str_file_Stored, DOWNLOAD_FOLDER), Toast.LENGTH_LONG);
                 }
@@ -117,11 +130,16 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
                 //Use below method for Image Compression
-                File compressedFile = MediaFiles.getCompressedImageFile(this,mediaFiles.getFile(), MediaFiles.getExternalCacheDirectoryPath(this,""), -1, null, -1, -1);
-                loadImage(mediaFiles.getFile());
-                String size = MediaFiles.getFileSize(compressedFile);
-                showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),size);
-                MediaFiles.showToastMessage(this,getString(R.string.str_file_compressed), Toast.LENGTH_LONG);
+                File compressedFile = null;
+                try {
+                    compressedFile = MediaFiles.getCompressedImageFile(this,mediaFiles.getFile(), MediaFiles.getExternalCacheDirectoryPath(this,""), -1, null, -1, -1);
+                    loadImage(mediaFiles.getFile());
+                    String size = MediaFiles.getFileSize(compressedFile);
+                    showFileInfoDialog(mediaFiles.getFilePath(),mediaFiles.getFileName(),size);
+                    MediaFiles.showToastMessage(this,getString(R.string.str_file_compressed), Toast.LENGTH_LONG);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             case R.id.item_enable_crop:
                 item.setChecked(!item.isChecked());

@@ -22,5 +22,6 @@ public interface FilePickConstants {
     String PICTURE_FOLDER="Pictures";
     String DCIM_FOLDER="/DCIM";
     String PNG_FILE_FORMAT=".png";
+    String PDF_FILE_FORMAT=".pdf";
     String JPG_FILE_FORMAT=".jpg";
 }

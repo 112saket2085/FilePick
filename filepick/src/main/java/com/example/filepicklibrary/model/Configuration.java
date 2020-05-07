@@ -31,8 +31,9 @@ public class Configuration implements Serializable {
             return this;
         }
 
-        public void setCameraPermissionRequired(boolean cameraPermissionRequired) {
+        public Builder setCameraPermissionRequired(boolean cameraPermissionRequired) {
             configuration.isCameraPermissionRequired = cameraPermissionRequired;
+            return  this;
         }
 
         public Builder setAspectRatioX(int aspectRatioX) {

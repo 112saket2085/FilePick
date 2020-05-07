@@ -4,9 +4,6 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
@@ -19,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,15 +31,11 @@ import com.example.filepicklibrary.utility.DialogBuilder;
 import com.example.filepicklibrary.utility.PermissionCompatBuilder;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.theartofdev.edmodo.cropper.CropImage;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.content.Intent.ACTION_PICK;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
-import static com.example.filepicklibrary.app.FilePickConstants.ERROR_CODE_FILE_PICK_;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_TEXT;
 
@@ -63,6 +55,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
     private FileItemAdapter fileItemAdapter;
     private Configuration configuration = new Configuration();
     private Intent resultingIntent;
+    private String cameraPhotoPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -200,8 +193,8 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
     }
 
     private void launchGallery(Intent intent) {
-        if(PermissionCompatBuilder.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION);
+        if(PermissionCompatBuilder.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},PermissionCompatBuilder.Code.REQ_CODE_READ_EXTERNAL_STORAGE_PERMISSION);
             return;
         }
         startActivityForResult(intent, INTENT_FILE_PICK);
@@ -213,7 +206,12 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
             PermissionCompatBuilder.requestPermissions(this,new String[]{Manifest.permission.CAMERA},PermissionCompatBuilder.Code.REQ_CODE_CAMERA);
             return;
         }
-        Uri photoURI = MediaFiles.createTempBitmapFile(this,null,"","");
+        Uri photoURI = null;
+        File file = MediaFiles.getExternalFilesDirectoryFile(this,"","");
+        if(file!=null) {
+            this.cameraPhotoPath = file.getAbsolutePath();
+            photoURI = MediaFiles.getFileProviderUri(this,file);
+        }
         if (photoURI != null) {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         }
@@ -287,7 +285,7 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
                     if (data != null && data.getData()!=null) {
                         selectedImageUri = data.getData();
                     } else {
-                        selectedImageUri = Uri.fromFile(new File(MediaFiles.getCameraPhotoPath()));
+                        selectedImageUri = Uri.fromFile(new File(cameraPhotoPath));
                     }
                     if (data!=null && !TextUtils.isEmpty(data.getAction()) && data.getAction().equalsIgnoreCase(MediaStore.ACTION_IMAGE_CAPTURE) && configuration.isCropRequired()) {
                         openCropperActivity(selectedImageUri);
