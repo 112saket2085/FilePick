@@ -32,7 +32,7 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-       	implementation 'com.github.112saket2085:FilePick:1.6'
+       	implementation 'com.github.112saket2085:FilePick:1.7'
 
     }
 ```
@@ -155,6 +155,13 @@ And various methods are avialble under MediaFiles class.
 ```
 
 ## Change log
+
+## 1.7
+
+```
+MediaFiles.java - Added option for passing fileName as parameter in creating cache or temp file
+
+```
 
 ## 1.6
 
