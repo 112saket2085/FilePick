@@ -6,11 +6,11 @@ A FilePick library for Android for selecting file from gallery or camera.
 
 It shows Intent of all apps available to handle file request in Bottom Sheet.
 
-[New Apk](https://tinyurl.com/y7bttele)
+[New Apk](https://tinyurl.com/ycud8w3u)
 
-[Debug Library](https://tinyurl.com/yc57xyy3)
+[Debug Library](https://tinyurl.com/yaduqczj)
 
-[Release Library](https://tinyurl.com/y7nlvxfs)
+[Release Library](https://tinyurl.com/ydz9wpfg)
 
 
 
@@ -32,7 +32,7 @@ Step 2: Add the dependency
 ```bash
  dependencies {
         ...
-       	implementation 'com.github.112saket2085:FilePick:1.7'
+       	implementation 'com.github.112saket2085:FilePick:1.8'
 
     }
 ```
@@ -155,6 +155,18 @@ And various methods are avialble under MediaFiles class.
 ```
 
 ## Change log
+
+## 1.8
+
+```
+MediaFiles.java - Added support method to store file into app storage.Added method to get different storage file and directory path.Added support for Bitmap.CompressFormat.
+Added support for creating pdf file and adding bitmap image with byte into pdf file.
+FilePickActivity.java - Added changes in camera path.
+AndroidManifest.xml - Added requestLegacyExternalStorage Flag
+Configuration.java - Added changes in camera permission.
+
+```
+
 
 ## 1.7
 
