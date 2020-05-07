@@ -22,6 +22,10 @@ android {
         }
     }
 
+    applicationVariants.all { variant ->
+        renameAPK(variant, defaultConfig)
+    }
+
 }
 
 dependencies {
@@ -31,4 +35,17 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation "com.google.android.material:material:$material_version"
     implementation project(path: ':filepick')
+}
+
+def renameAPK(variant, defaultConfig) {
+    variant.outputs.all { output ->
+        def formattedDate = new Date().format('ddMMMyy')
+        def buildName
+        if (variant.variantData.variantConfiguration.buildType.name == "debug") {
+            buildName = "UUAT"
+        } else {
+            buildName = "SPROD"
+        }
+        outputFileName = applicationName + "_" + buildName + "_" + formattedDate + "_" + defaultConfig.versionName + "_" + defaultConfig.versionCode + ".apk"
+    }
 }
