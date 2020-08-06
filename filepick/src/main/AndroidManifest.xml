@@ -8,11 +8,9 @@
     <application
         tools:ignore="GoogleAppIndexingWarning"
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="@string/app_name_Lib"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
         android:requestLegacyExternalStorage="true">
-
         <activity android:name=".ui.activity.FilePickActivity"
             android:theme="@style/Theme.Transparent"/>
 

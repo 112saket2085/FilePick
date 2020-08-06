@@ -34,6 +34,8 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.content.Intent.ACTION_GET_CONTENT;
 import static android.content.Intent.ACTION_PICK;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static com.example.filepicklibrary.app.FilePickConstants.INTENT_FILE_PICK;
@@ -81,9 +83,11 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
      */
     public void setFilePickerIntents() {
         //Add All Camera Intents
-        List<Intent> cameraIntents = getCameraIntents();
-        if (!cameraIntents.isEmpty()) {
-            filePickerIntents.addAll(cameraIntents);
+        if(configuration.isCameraRequired()) {
+            List<Intent> cameraIntents = getCameraIntents();
+            if (!cameraIntents.isEmpty()) {
+                filePickerIntents.addAll(cameraIntents);
+            }
         }
 
         //Add All Gallery Intents
@@ -121,26 +125,31 @@ public class FilePickActivity extends AppCompatActivity implements FileItemAdapt
      */
     public List<Intent> getGalleryIntents() {
         List<Intent> intents = new ArrayList<>();
-        Intent galleryIntent = new Intent(ACTION_PICK);
+        Intent galleryIntent = new Intent(configuration.getACTION_INTENT_TYPE());
         galleryIntent.setType(configuration.getIntentType());
-        if(configuration.getIntentType().equalsIgnoreCase(FilePickConstants.FILE_INTENT_TYPE)) {
+        if(!configuration.getIntentType().equalsIgnoreCase(FilePickConstants.IMAGE_INTENT_TYPE)) {
             galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
         }
         PackageManager packageManager = getPackageManager();
         List<ResolveInfo> listGallery = packageManager.queryIntentActivities(galleryIntent, 0);
         for (ResolveInfo res : listGallery) {
-            Intent intent = new Intent(galleryIntent);
-            fileIconList.add(res.activityInfo.loadIcon(packageManager));
-            String title = res.activityInfo.loadLabel(packageManager).toString();
-            String name = res.activityInfo.packageName;
-            intent.putExtra(INTENT_FILE_TEXT, title);
-            intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-            intent.setPackage(res.activityInfo.packageName);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intents.add(intent);
+            if(!isPackageIgnore(res.activityInfo.packageName)) {
+                Intent intent = new Intent(galleryIntent);
+                fileIconList.add(res.activityInfo.loadIcon(packageManager));
+                String title = res.activityInfo.loadLabel(packageManager).toString();
+                intent.putExtra(INTENT_FILE_TEXT, title);
+                intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+                intent.setPackage(res.activityInfo.packageName);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intents.add(intent);
+            }
         }
 
         return intents;
+    }
+
+    private boolean isPackageIgnore(String packageName) {
+        return packageName.equalsIgnoreCase("com.android.browser");
     }
 
     public void showBottomSheetDialog() {

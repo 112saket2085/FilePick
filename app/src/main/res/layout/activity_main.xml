@@ -40,9 +40,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:background="@color/colorAccent"
+            android:background="@color/colorAccentLib"
             android:text="Add File"
-            android:textColor="@color/white"
+            android:textColor="@color/whiteLib"
             android:textSize="16sp" />
 
     </RelativeLayout>

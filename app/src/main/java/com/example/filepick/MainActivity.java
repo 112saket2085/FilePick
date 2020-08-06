@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        DOWNLOAD_FOLDER="Pictures/"+getString(R.string.app_name);
+        DOWNLOAD_FOLDER="Pictures/"+getString(R.string.app_name_Lib);
         imageView=findViewById(R.id.image_view);
         buttonAdd=findViewById(R.id.button_add);
     }
@@ -57,7 +56,10 @@ public class MainActivity extends AppCompatActivity {
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Configuration configuration=new Configuration.Builder().setCropRequired(isCropRequired).setAspectRatioX(1).setAspectRatioY(1).build();
+                Configuration configuration = new Configuration.Builder()
+                        .setCameraPermissionRequired(false)
+                        .build();
+//                Configuration configuration=new Configuration.Builder().setCameraRequired(false).setCropRequired(isCropRequired).setAspectRatioX(1).setAspectRatioY(1).setActionIntentType(Intent.ACTION_GET_CONTENT).setIntentType("text/csv").build();
                 FilePickIntentCreator.loadFilePickerRequest(MainActivity.this,configuration);
             }
         });
