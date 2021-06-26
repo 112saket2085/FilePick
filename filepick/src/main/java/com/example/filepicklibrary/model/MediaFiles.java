@@ -156,9 +156,9 @@ public class MediaFiles {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, TextUtils.isEmpty(fileName) ? getDefaultImageFileName(false) : fileName);
-            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg"); // For PDF use MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, TextUtils.isEmpty(directory) ? FilePickConstants.PICTURE_FOLDER : directory);
-            Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+            Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues); // for pdf use  Uri uri = context.getContentResolver().insert( MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), contentValues);
             insertImageIntoFileOutput(context,uri, bitmap,compressFormat,data);
             contentValues.clear();
             contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
